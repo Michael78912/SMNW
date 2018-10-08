@@ -1,0 +1,1 @@
+in order to keep a consistent donwnload link, you need backup and sync for google drive, and sync the file that you need updated. i also used a direct link maker (https://sites.google.com/site/gdocs2direct/) very useful. I will use this link to download a tar file for the updater.

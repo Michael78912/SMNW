@@ -1,0 +1,11 @@
+{
+	"all_characters": ["swordsman", "archer", "wizard", "angel", "spearman"],
+	"all_enemies": ["blob"],
+	"all_weapons": {
+		"angel": "knife",
+		"swordsman": "sword",
+		"wizard": "wand",
+		"archer": "bow",
+		"spearman": "spear"
+	}
+}

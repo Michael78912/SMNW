@@ -1,0 +1,39 @@
+it helps me to look at things...
+
+
+
+
+
+
+topleft                  topright
+            [--------]
+            |        |
+            |        |
+            |        |
+            |        |
+            |        |
+            |        |
+            |        |
+            |        |
+bottomleft  [--------]   bottomright
+
+sizex = 7
+sizey = 11
+
+passed (150, 300)
+topleft = (150, 300)
+bottomleft = (157, 300)
+topright = (150, 311)
+bottomright = (157, 311)
+
+coordinates are correct!
+I dont know wether to be happy  or not
+(i am debugging character_image.py, in case I actaully included this file :))
+
+randint(self.bottomleft[0], self.sizex // 2 + self.bottomleft[1]) is where i believe things are going wrong
+
+self.bottomleft[1] == 300
+self.sizex // 2 == 3
+self.topright[1] = 311
+self.sizex // 2 + self.bottomleft[0] == 3 + 300 == 303
+same as calling randint(295, 311)

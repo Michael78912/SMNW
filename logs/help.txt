@@ -1,0 +1,24 @@
+this file is me trying to debug my algorithms
+
+playcoords = [3, 10, 19]
+mycoord = 14
+
+dest = abs(minimum(14 - 3, 14 - 10, 14 - 19)) ?-> abs(min(11, 4, -5) -> -5) -> 5
+// not working
+
+foreach playcoords -> 
+
+x = 3
+abs(14 - 3) = 11
+
+x=10
+abs(14 - 10) = 4
+
+x = 19
+abs(14 - 19) = 5
+
+possible = [11, 4, 5]
+coord = min(possible) = 4
+
+for i, b in zip(playcoords, possible):
+	if 

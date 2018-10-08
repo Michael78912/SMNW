@@ -1,0 +1,9 @@
+{
+	"version": "0.0.0.0",
+	"system": "windows",
+	"build": 1,
+	"install_path": "C:\\Program Files\\stickmanranger\\",
+	"install_path_game": "C:\\Program Files\\stickmanranger\\game\\",
+	"executable": "main.exe",
+	"data_directory": "C:\\Users\\{}\\.stickman_new_world\\"
+}

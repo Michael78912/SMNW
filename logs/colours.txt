@@ -1,0 +1,8 @@
+Plain: R: 159 G: 255 B: 116 
+City 64, 64, 64 
+Jungle: 0, 100, 0 
+Forest: 113, 147, 0 
+Ocean: 0, 0, 196 
+Desert: 234, 234, 109 
+Tundra: 242, 242, 242 
+255, 178, 58 farmland 

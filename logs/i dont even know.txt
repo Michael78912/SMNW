@@ -1,0 +1,5 @@
+line 57: (300, 300) is passed to __init__ as pos
+line 28: (300, 300 + 10) is set as self.topright
+problem solved!
+
+
