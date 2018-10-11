@@ -78,7 +78,7 @@ def draw_spear(surface, armpoint, colour):
 def draw_wand(surface, armpoint, colour):
     """draws a wand on the end of the arm."""
     draw_sword(surface, armpoint, colour, 7)
-    pg.image.save(surface, r'C:\Users\Michael\desktop\test_images\thing.png')
+   # pg.image.save(surface, r'C:\Users\Michael\desktop\test_images\thing.png')
 
 
 DEFAULT_WEAPONS = {

@@ -51,12 +51,13 @@ s = pg.Surface((100, 100))
 d = pg.Surface((10, 10))
 d.fill(BLACK)
 _border(d, WHITE)
-pg.image.save(d, r'C:\Users\Michael\Desktop\test_images\howdy.png')
+# pg.image.save(d, r'C:\Users\Michael\Desktop\test_images\howdy.png')
 
 class Box:
     """box that can hold an image."""
 
     border = True
+    selected = False
 
     def __init__(self,
                  topleft,
@@ -64,12 +65,14 @@ class Box:
                  height,
                  colour=BLACK,
                  image=None,
+                 onclick=lambda: None,
                  ):
         self.topleft = topleft
         self.colour = colour
         self.image = image
         self.width = width
         self.height = height
+        self.onclick = onclick
 
     def draw(self, surf):
         """draw the box to the screen."""
@@ -77,7 +80,28 @@ class Box:
         top, left = self.topleft
         rect = pg.Rect((top, left), (self.width, self.height))
 
-        pg.draw.rect(surf, self.colour, rect, 1)
+        
+
+
+        
+
+        if self.selected:
+            # make the box red instead.
+            pg.draw.rect(surf, COLOURS['red'], rect, 1)
+
+        else:
+            pg.draw.rect(surf, self.colour, rect, 1)
+
+        if self.image is not None:
+            img_rect = self.image.get_rect()
+            img_rect.center = rect.center
+
+    def handle(self, event, *args, **kwargs):
+        """handle the event. if it is clicked on, then call and return
+        self.onclick. if not, do nothing.
+        """
+
+        return self.onclick(*args, **kwargs)
 
 
 
@@ -273,17 +297,18 @@ def draw_choices():
     return choices
 
 
-def draw_characters():
-    """draw the characters to the screen, in appropriate
-    locations. (for character selection)
-    """
-
 
 START_X, START_Y = 100, WIN_Y // 2
 
-def add_chosen():
-    """add a chosen player to the selected boxes."""
-
+def _make_coloured(box):
+    if box._colour == 0:
+        box._colour = 1
+        box.colour = COLOURS['red']
+        return box
+    else:
+        box._colour = 0
+        box.colour = COLOURS['white']
+        return None
 
 def new_game():
 
@@ -360,14 +385,23 @@ def new_game():
 
     chosen = []
 
+    def set_(box):
+        box.selected = not box.selected
+
     chosen_boxes = [
-    Box((250, 400), 30, 30, WHITE),
-    Box((350, 400), 30, 30, WHITE),
-    Box((450, 400), 30, 30, WHITE),
-    Box((550, 400), 30, 30, WHITE),
+            Box((250, 400), 30, 30, WHITE, onclick=lambda: set_(chosen_boxes[0])),
+            Box((350, 400), 30, 30, WHITE, onclick=lambda: set_(chosen_boxes[1])),
+            Box((450, 400), 30, 30, WHITE, onclick=lambda: set_(chosen_boxes[2])),
+            Box((550, 400), 30, 30, WHITE, onclick=lambda: set_(chosen_boxes[3])),
     ]
 
-    print('Wow, a new game already???')
+    
+    chosen_boxes[0].selected = True
+
+    def get_selected():
+        """return the selected box."""
+        for i in chosen_boxes:
+            if i.selected: return i
 
     continue_ = True
     num_selected = 0
@@ -397,7 +431,18 @@ def new_game():
         print((str(num_selected) + "\n") * 10)
 
         pg.display.update()
-        CLOCK.tick(FPS)
+        CLOCK.tick(30)
+
+
+def add_chosen(box, character):
+    """add a chosen player to the selected boxes."""
+
+
+class MutableCarrier:
+    """can carry an object, and have it be changed."""
+    def __init__(self, item):
+        self.item = item
+
 
 RECT_FUNCS = {
     0: lambda: None,

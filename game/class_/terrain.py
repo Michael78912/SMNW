@@ -25,8 +25,6 @@ except ImportError:
     from ._internal import *
     from .smr_error import SMRError
 
-with open('C:\\Users\\Michael\\FFFFFFFFFF.TXT', 'a') as s:
-    s.write(DIR)
 
 VALID_COMMANDS = ('air', 'water', 'size')
 

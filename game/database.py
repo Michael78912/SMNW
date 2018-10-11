@@ -83,17 +83,17 @@ ALL_WEAPONS = []
 
 ALL_COMPOS = []
 
-_SAVE = save.read_file()
+# _SAVE = save.read_file()
 # print(_SAVE)
-_INV_RAW = _SAVE['inventory']
-x, y = max([int(i.split('x')[0]) for i in _INV_RAW]), max(
-    [int(i.split('x')[1]) for i in _INV_RAW])
-_INV = _class_.InventoryHandler(x, y)
-_INV.sort_dict(_INV_RAW)
+#_INV_RAW = _SAVE['inventory']
+# x, y = max([int(i.split('x')[0]) for i in _INV_RAW]), max(
+#     [int(i.split('x')[1]) for i in _INV_RAW])
+# _INV = _class_.InventoryHandler(x, y)
+# _INV.sort_dict(_INV_RAW)
 
-MAIN_GAME_STATE = {
-    'SETTINGS': SETTINGS,
-    'GAME_DATA': _SAVE,
-    'INVENTORY': _INV,
-    'MAIN_DISPLAY_SURF': SURFACE,
-}
+# MAIN_GAME_STATE = {
+#     'SETTINGS': SETTINGS,
+#     'GAME_DATA': _SAVE,
+#     'INVENTORY': _INV,
+#     'MAIN_DISPLAY_SURF': SURFACE,
+# }
