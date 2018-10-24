@@ -4,47 +4,47 @@ stickmanranger.
 """
 try:
     from _internal import *
-    from character import Character
+    from klass import Class
 
 except ImportError:
     from ._internal import *
-    from .character import Character
+    from .klass import Class
 
 __all__ = ['Swordsman', 'Angel', 'Archer', 'Spearman', 'Wizard']
 
 DEFAULT_STATS = (50, 0, 0, 0, 0)
 
 
-class Swordsman(Character):
+class Swordsman(Class):
     image = PICS['characters']['swordsman']
 
-    def __init__(self, player_num, stats=DEFAULT_STATS):
-        Character.__init__(self, 'swordsman', stats)
+    def __init__(self, player_num, main_game_state, stats=DEFAULT_STATS):
+        Class.__init__(self, 'swordsman', player_num, main_game_state, stats)
 
 
-class Angel(Character):
+class Angel(Class):
     image = PICS['characters']['angel']
 
-    def __init__(self, player_num, stats=DEFAULT_STATS):
-        Character.__init__(self, 'angel', stats)
+    def __init__(self, player_num, main_game_state,stats=DEFAULT_STATS):
+        Class.__init__(self, 'angel', player_num, main_game_state, stats)
 
 
-class Archer(Character):
+class Archer(Class):
     image = PICS['characters']['archer']
 
-    def __init__(self, player_num, stats=DEFAULT_STATS):
-        Character.__init__(self, player_num, stats)
+    def __init__(self, player_num, main_game_state,stats=DEFAULT_STATS):
+        Class.__init__(self, 'archer', player_num, main_game_state, stats)
 
 
-class Spearman(Character):
+class Spearman(Class):
     image = PICS['characters']['spearman']
 
-    def __init__(self, player_num, stats=DEFAULT_STATS):
-        Character.__init__(self, player_num, stats)
+    def __init__(self, player_num, main_game_state,stats=DEFAULT_STATS):
+        Class.__init__(self, 'spearman', player_num, main_game_state, stats)
 
 
-class Wizard(Character):
+class Wizard(Class):
     image = PICS['characters']['wizard']
 
-    def __init__(self, player_num, stats=DEFAULT_STATS):
-        Character.__init__(self, player_num, stats)
+    def __init__(self, player_num, main_game_state,stats=DEFAULT_STATS):
+        Class.__init__(self, 'wizard', player_num, main_game_state, stats)

@@ -1,4 +1,4 @@
-@air=(255, 0, 0)
+@air=(0, 20, 128)
 ; this is the first file I made in terrains.
 ; it is technically a new file format, even though it is
 ; plain text. syntax is discussed below.

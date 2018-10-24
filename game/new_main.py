@@ -11,10 +11,10 @@ from pygame.locals import QUIT, MOUSEBUTTONDOWN, MOUSEMOTION
 import pygame as pg
 
 from class_.character_image import CharacterImage
-from database import COLOURS
+from database import COLOURS, MAIN_GAME_STATE
 import database
+import gameplay
 import class_
-import picture_collect
 
 # window sizes
 WIN_X, WIN_Y = 800, 600
@@ -22,12 +22,14 @@ MID_X = WIN_X // 2
 MID_Y = WIN_X // 2
 CENTRE = MID_X, MID_Y
 
+CENTRE_X, CENTRE_Y = database.SURFACE.get_rect().center
+
 WHITE = COLOURS['white']
 BLACK = COLOURS['black']
 
 FPS = 60
 
-PICS = picture_collect.gather_pics('data')
+PICS = database.PICS
 
 
 def _border(surf, colour):
@@ -41,9 +43,9 @@ def _border(surf, colour):
     right = rect.topright, rect.bottomright
 
     lines = [(rect.bottomright[0] - 1, rect.bottomright[1] - 1),
-     (rect.bottomleft[0], rect.bottomleft[1] - 1), 
-     (rect.topleft[0], rect.topleft[0]), 
-     (rect.topright[0] - 1, rect.topright[1])]
+             (rect.bottomleft[0], rect.bottomleft[1] - 1),
+             (rect.topleft[0], rect.topleft[0]),
+             (rect.topright[0] - 1, rect.topright[1])]
 
     pg.draw.lines(surf, colour, True, lines)
 
@@ -52,6 +54,7 @@ d = pg.Surface((10, 10))
 d.fill(BLACK)
 _border(d, WHITE)
 # pg.image.save(d, r'C:\Users\Michael\Desktop\test_images\howdy.png')
+
 
 class Box:
     """box that can hold an image."""
@@ -74,16 +77,14 @@ class Box:
         self.height = height
         self.onclick = onclick
 
+        top, left = self.topleft
+
+        self.rect = pg.Rect((top, left), (self.width, self.height))
+
     def draw(self, surf):
         """draw the box to the screen."""
 
-        top, left = self.topleft
-        rect = pg.Rect((top, left), (self.width, self.height))
-
-        
-
-
-        
+        rect = self.rect
 
         if self.selected:
             # make the box red instead.
@@ -95,15 +96,19 @@ class Box:
         if self.image is not None:
             img_rect = self.image.get_rect()
             img_rect.center = rect.center
+            surf.blit(self.image, img_rect)
 
     def handle(self, event, *args, **kwargs):
         """handle the event. if it is clicked on, then call and return
         self.onclick. if not, do nothing.
         """
 
-        return self.onclick(*args, **kwargs)
-
-
+        try:
+            if self.rect.collidepoint(event.pos) and event.type == MOUSEBUTTONDOWN:
+                return self.onclick(*args, **kwargs)
+        except AttributeError:
+            # incorrect event.
+            pass
 
 
 # clock for keeping track of FPS
@@ -164,20 +169,20 @@ class ClickableLabel:
 
         mouseover = self.rect.collidepoint(
             pg.mouse.get_pos())
-        print(pg.mouse.get_pos())
-        print(self.rect.topleft)
+        # print(pg.mouse.get_pos())
+        #@print(self.rect.topleft)
 
         if mouseover:
-            print('shading')
+            # print('shading')
             self._shade()
             self.shaded = True
 
         else:
             self.shaded = False
 
-        if self.underlined:
-            start, end = self.rect.bottomleft, self.rect.bottomright
-            pg.draw.line(surface, self.forecolour, start, end)
+       # if self.underlined:
+        #    start, end = self.rect.bottomleft, self.rect.bottomright
+        #    pg.draw.line(surface, self.forecolour, start, end)
 
         surface.blit(textsurf, textrect)
 
@@ -221,30 +226,28 @@ def main():
 
     func = lambda: None
     continue_ = True
+    rects = draw_choices()
+
+    pg.mixer.music.load(os.path.join(
+        os.getcwd(), 'music', 'smnwtheme.mp3'
+    ))
+    pg.mixer.music.play(-1)   # loop forever, until stopped
 
     while continue_:
         SURFACE.blit(PICS['menu_background'], (0, 0))
-        rects = draw_choices()
+        label("Stickman's New World", CENTRE_X, 100, size=60)
+        for lbl in rects:
+            lbl.draw(SURFACE)
         for event in pg.event.get():
             check_quit(event)
 
-            if event.type == MOUSEBUTTONDOWN:
-                # mouse clicked
-                for rect, _, num in rects:
-                    # if the rect was clicked on
-                    if rect.collidepoint(*event.pos):
-                        # set func to proper function
-                        func = RECT_FUNCS[num]
-                        # stop while loop
-                        continue_ = not continue_
+            for lbl in rects:
+                lbl.handle(event, SURFACE)
 
-            elif event.type == MOUSEMOTION:
-                # mouse moved
-                for rect, surf, num in rects:
-                    # handle shading of rectangle hovered over
-                    rect.handle(event, SURFACE, surf)
-            # update display. needs to be in the for loop to avoid
-            
+                if event.type == MOUSEBUTTONDOWN and lbl.rect.collidepoint(*event.pos):
+                    func = lbl.function
+                    continue_ = False
+
         pg.display.update()
         CLOCK.tick(FPS)
 
@@ -283,22 +286,28 @@ def draw_choices():
     on game start.
     """
 
-    centre_x, centre_y = SURFACE.get_rect().center
-    print(centre_x, centre_y)
+    # print(centre_x, centre_y)
 
-    label("Stickman's New World", centre_x, 100, size=60)
+    # choices = [
+    #     drawopt('New Game', centre_x, centre_y - 50, 1),
+    #     drawopt('Load Game', centre_x, centre_y, 2),
+    #     drawopt('Settings', centre_x, centre_y + 50, 3)
+    # ]
 
     choices = [
-        drawopt('New Game', centre_x, centre_y - 50, 1),
-        drawopt('Load Game', centre_x, centre_y, 2),
-        drawopt('Settings', centre_x, centre_y + 50, 3)
+        ClickableLabel("New Game", (CENTRE_X, CENTRE_Y - 100),
+                       RECT_FUNCS[1], WHITE, textsize=40),
+        ClickableLabel("Load Game", (CENTRE_X, CENTRE_Y),
+                       RECT_FUNCS[0], WHITE, textsize=40),
+        ClickableLabel("Settings", (CENTRE_X, CENTRE_Y + 100),
+                       RECT_FUNCS[2], WHITE, textsize=40),
     ]
 
     return choices
 
 
-
 START_X, START_Y = 100, WIN_Y // 2
+
 
 def _make_coloured(box):
     if box._colour == 0:
@@ -310,6 +319,7 @@ def _make_coloured(box):
         box.colour = COLOURS['white']
         return None
 
+
 def new_game():
 
     char_imgs = [
@@ -317,27 +327,56 @@ def new_game():
                        # fake weapon. only has colour attribute
                        Namespace(colour='grey'),
                        (START_X, START_Y),
-                       None, None
+                       None,
                        ),
         CharacterImage('angel',
                        Namespace(colour='gold'),
                        (START_X + 150, START_Y),
-                       None, None
+                       None,
                        ),
         CharacterImage('archer',
                        Namespace(colour='brown'),
                        (START_X + 300, START_Y),
-                       None, None,
+                       None,
                        ),
         CharacterImage('spearman',
                        Namespace(colour='grey'),
                        (START_X + 450, START_Y),
-                       None, None,
+                       None,
                        ),
         CharacterImage('wizard',
                        Namespace(colour='blue'),
                        (START_X + 600, START_Y),
-                       None, None,
+                       None,
+                       ),
+    ]
+
+    selected_char_imgs = [
+        CharacterImage('swordsman',
+                       # fake weapon. only has colour attribute
+                       Namespace(colour='grey'),
+                       (12, 16),
+                       None,
+                       ),
+        CharacterImage('angel',
+                       Namespace(colour='gold'),
+                       (12, 16),
+                       None,
+                       ),
+        CharacterImage('archer',
+                       Namespace(colour='brown'),
+                       (12, 16),
+                       None, 
+                       ),
+        CharacterImage('spearman',
+                       Namespace(colour='grey'),
+                       (12, 16),
+                       None, 
+                       ),
+        CharacterImage('wizard',
+                       Namespace(colour='blue'),
+                       (12, 16),
+                       None, 
                        ),
     ]
 
@@ -383,31 +422,49 @@ def new_game():
         ),
     ]
 
-    chosen = []
+    # this is a list of four, and contains a box aligned with its image.
+    chosen = [(None, None)] * 4
 
     def set_(box):
-        box.selected = not box.selected
+        old = get_selected()
+        # print(old, 'HoWdY YoU FeLlErS')
+        old.selected = False
+        box.selected = True
 
     chosen_boxes = [
-            Box((250, 400), 30, 30, WHITE, onclick=lambda: set_(chosen_boxes[0])),
-            Box((350, 400), 30, 30, WHITE, onclick=lambda: set_(chosen_boxes[1])),
-            Box((450, 400), 30, 30, WHITE, onclick=lambda: set_(chosen_boxes[2])),
-            Box((550, 400), 30, 30, WHITE, onclick=lambda: set_(chosen_boxes[3])),
+        Box((250, 400), 30, 30, WHITE, onclick=lambda: set_(chosen_boxes[0])),
+        Box((350, 400), 30, 30, WHITE, onclick=lambda: set_(chosen_boxes[1])),
+        Box((450, 400), 30, 30, WHITE, onclick=lambda: set_(chosen_boxes[2])),
+        Box((550, 400), 30, 30, WHITE, onclick=lambda: set_(chosen_boxes[3])),
     ]
 
-    
     chosen_boxes[0].selected = True
 
     def get_selected():
         """return the selected box."""
         for i in chosen_boxes:
-            if i.selected: return i
+            if i.selected:
+                # print(chosen_boxes.index(i))
+                return i
 
     continue_ = True
     num_selected = 0
 
+    next_button = ClickableLabel(
+        "Next", (700, 420), lambda: None, WHITE, textsize=50)
+    next_button.draw(SURFACE)
+    if None not in chosen:
+        # fills the next_button.rect spot. will not show up yet
+        next_button.draw(SURFACE)
+    filled = False
+
     while continue_:
+
         SURFACE.blit(PICS['menu_background'], (0, 0))
+        if None not in chosen:
+            next_button.draw(SURFACE)
+            filled = True
+
         label('Choose your players:', MID_X, 75, 60)
         for box in chosen_boxes:
             box.draw(SURFACE)
@@ -417,37 +474,91 @@ def new_game():
 
         for i in char_lbls:
             i.draw(SURFACE)
-            if i.underlined:
-                add_chosen(char_lbls, i, char_imgs[char_lbls.index(i)])
+            # if i.underlined:
+            # add_chosen(char_lbls, i, char_imgs[char_lbls.index(i)])
 
         for event in pg.event.get():
             check_quit(event)
 
             for lbl in char_lbls:
                 lbl.handle(event, SURFACE)
-                # label.update(SURFACE)
+                if event.type == MOUSEBUTTONDOWN and lbl.rect.collidepoint(*event.pos):
+                    # need to add the character's image to the selected box.
+                    item = selected_char_imgs[char_lbls.index(lbl)]
+                    box = chosen_boxes.index(get_selected())
+                    chosen[box] = (item, get_selected())
+
+                if event.type == MOUSEBUTTONDOWN and \
+                        next_button.rect.collidepoint(*event.pos) and \
+                        filled:
+                    continue_ = False
+
+            for box in chosen_boxes:
+                box.handle(event)
+
+        for pair in chosen:
+            if pair == (None, None):
+                break
+
+            character, box = pair
+            coords = box.topleft[0] + 10, box.topleft[1] + 17
+
+            character.update_coords(coords)
+
+            character.build_image(SURFACE)
 
             # pg.display.update()
-        print((str(num_selected) + "\n") * 10)
+        # print((str(num_selected) + "\n") * 10)
 
         pg.display.update()
-        CLOCK.tick(30)
+        CLOCK.tick(24)
+
+    continue_ = True
+    MAIN_GAME_STATE["AREA"] = database.Area.MAP
+    MAIN_GAME_STATE["PLAYERS"] = get_characters_from_images([i[0] for i in chosen])
+    print(MAIN_GAME_STATE["PLAYERS"])
 
 
-def add_chosen(box, character):
-    """add a chosen player to the selected boxes."""
+    # while continue_:
+    #     gameplay.draw_map()
+    #     gameplay.handle_map()
+    #     pg.display.update()
+
+    gameplay.main()
 
 
-class MutableCarrier:
-    """can carry an object, and have it be changed."""
-    def __init__(self, item):
-        self.item = item
+def get_characters_from_images(images):
+    """get and return an actual character type, not
+    just an image of it.
+    """
+
+    names = [i.type_ for i in images]
+    characters = []
+
+    namestotypes = {
+        'swordsman': class_.Swordsman,
+        'angel': class_.Angel,
+        'archer': class_.Archer,
+        'spearman': class_.Spearman,
+        'wizard': class_.Wizard,
+    }
+    num = 1
+    for name in names:
+        characters.append(namestotypes[name](num, MAIN_GAME_STATE))
+        num += 1
+
+    return characters
+
+
+class FakeWeapon:
+    def __init__(self, colour):
+        self.colour = colour
 
 
 RECT_FUNCS = {
     0: lambda: None,
     1: new_game,
-
+    2: lambda: None,
 }
 
 

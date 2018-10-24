@@ -11,6 +11,7 @@ DEF_SIZE = 1
 class EnemyHead:
     def __init__(self, type_str, colour, size=DEF_SIZE):
         print(size)
+        self.size_px = size * 10
         img = PICS['heads'][type_str][colour].copy()
         self.head = pygame.transform.scale(img, (size * 10, size * 10))
         print({100: COLOURS[' '.join(('light', colour))]})
@@ -18,15 +19,14 @@ class EnemyHead:
         self.name = colour + '_' + type_str
         self.pretty_name = ' '.join((colour, type_str)).title()
 
+    def get_image(self):
+        return self.head
+
 
 def main():
     import pygame
     image = pygame.image.load('happy.png')
     pygame.image.save(image, 'purplehappy.png')
-
-
-import pprint
-pprint.pprint(PICS)
 
 if __name__ == '__main__':
     s = EnemyHead('happy', 'green')

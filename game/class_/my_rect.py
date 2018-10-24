@@ -11,7 +11,7 @@ col = COLOURS
 class MyRect(pg.Rect):
     """this class is simply for keeping track of 
     when boxes are shaded"""
-    Shaded = False
+    shaded = False
     _accumval = 0
     underlined = False
     PicInside = None
@@ -21,45 +21,50 @@ class MyRect(pg.Rect):
         pg.Rect.__init__(self, *args)
         self.colour = colour
 
+
     def shade(self, Surface, Colour='gray'):
-        if not self.Shaded:
-            if type(Colour) not in (str, tuple, list):
-                raise TypeError(
-                    'Colour argument must be string or RGB sequence.')
+        #if not self.Shaded:
+        if type(Colour) not in (str, tuple, list):
+            raise TypeError(
+                'Colour argument must be string or RGB sequence.')
 
-            if type(Colour) == str:
-                try:
-                    Colour = col[Colour]  # convert the string to RGB tuple
-                except KeyError:
-                    raise Exception(
-                        'The Colour {} could not be found. please specify an RGB tuple instead'.
-                        format(Colour))
+        if type(Colour) == str:
+            try:
+                Colour = col[Colour]  # convert the string to RGB tuple
+            except KeyError:
+                raise Exception(
+                    'The Colour {} could not be found. please specify an RGB tuple instead'.
+                    format(Colour))
 
-            self.Shaded = True
-            self._accumval += 50
 
-            new_surf = pg.Surface((self.width, self.height))
-            new_surf.set_alpha(75)
-            new_surf.fill(Colour)
-            Surface.blit(new_surf, (self.x, self.y))
+        new_surf = pg.Surface((self.width, self.height))
+        new_surf.set_alpha(75)
+        new_surf.fill(Colour)
+        Surface.blit(new_surf, (self.x, self.y))
 
-        else:
-            raise SMRError('The Box is already shaded')
+        #else:
+        #    raise SMRError('The Box is already shaded')
 
     def unshade(self, Surface, OrigSurf):
         """
         practically the opposite of shade.
         unshades the box, which is crucial.
         """
-        if self.Shaded:
-            self.Shaded = False
-            filler = (255, 255, 255)
-            new_surf = pg.Surface((self.width, self.height))
-            new_surf.fill(filler)
-            Surface.blit(new_surf, (self.x, self.y))
-            Surface.blit(OrigSurf, (self.x, self.y))
-        else:
-            raise SMRError('you cannot unshade an unshaded box!')
+        #if self.Shaded:
+        self.Shaded = False
+        filler = (255, 255, 255)
+        new_surf = pg.Surface((self.width, self.height))
+        new_surf.fill(filler)
+        Surface.blit(new_surf, (self.x, self.y))
+        Surface.blit(OrigSurf, (self.x, self.y))
+        #else:
+            #raise SMRError('you cannot unshade an unshaded box!')
+
+    def draw(self, surface):
+        if self.shaded:
+            self.shade(surface)
+
+
 
     def handle(self, event, Surface, OrigSurf, colour='gray'):
         """

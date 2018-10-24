@@ -18,10 +18,12 @@ try:
     from .weapon import *
     from .characters import *
     from .enemies import *
+    from .attack import Attack
     import class_.enemies
     import class_.klass
 
 except SystemError:
+    from attack import Attack
     from inventory import InventoryHandler
     from screen import Screen, PeacefulScreen
     from backgroundimage import BackGroundImage

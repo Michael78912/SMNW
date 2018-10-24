@@ -1,47 +1,87 @@
+import random
+import copy
+
+
 class Screen:
+    firstrun = True
     """Screen is a piece of a stage.
     each stage can have any number of screens, and must have
     a boss screen.
-    Note: num_of_enemies_per_enemy must be same length as all_enemies.
-    if you put (enemy1, enemy2, enemy3) for all enemies,
-    and (3, 23, 12) for num_of_enemies_per_enemy, there would be
-    3 of enemy one, 23 of enemy2, and 12 of enemy3. [a crazy stage :)]
-    spawn_mode: 'random' makes a random position for each enemy, and if
-    you don't want random, you must put a Y coordinate for each enemy.
-    (that is, a tuple with subtuples for every enemy)
+    all_enemies is a dictionary, with keys of enemies, and values of 
+    the amount that enemy shoud spawn. ex:
+
+    {
+        SomeEnemy('blue', blablabla, 88): 10
+    }
+
+    will spawn 10 of SomeEnemy in this screen.
     """
 
     def __init__(
             self,
             all_enemies,
-            num_of_enemies_per_enemy,
             spawn_mode='random',
             # must put Y coordinate for each enemy to spawn
     ):
 
-        assert len(
-            all_enemies) == len(num_of_enemies_per_enemy
-                                ), "the enemies and quantities do not match"
+        # assert len(
+        #     all_enemies) == len(num_of_enemies_per_enemy
+        #                         ), "the enemies and quantities do not match"
 
-        self.all_enemies = all_enemies
-        self.num_of_enemies_per_enemy = num_of_enemies_per_enemy
+        # self.all_enemies = all_enemies
+        # self.num_of_enemies_per_enemy = num_of_enemies_per_enemy
+
+        # if spawn_mode == 'random':
+        #     new_spawn_mode = []
+
+        #     for enemy, quantity in zip(all_enemies, num_of_enemies_per_enemy):
+        #         for i in range(quantity):
+        #             new_spawn_mode.append((0 if enemy.area == 'ground' else
+        #                                    random.randint(1, 600), random.randint(1, 600)))
+        #     self.spawn_mode = new_spawn_mode
+
+        # else:
+        #     self.spawn_mode = spawn_mode
+
+        self.total_enemies = sum(all_enemies.values())
+        self.enemies = []
+
+        for i in all_enemies:
+            self.enemies += [copy.copy(i) for x in range(all_enemies[i])]
 
         if spawn_mode == 'random':
-            new_spawn_mode = []
-
-            for enemy, quantity in zip(all_enemies, num_of_enemies_per_enemy):
-                for i in range(quantity):
-                    new_spawn_mode.append((0 if enemy.area == 'ground' else
-                                           random.randint(1, 600), random.randint(1, 600)))
-            self.spawn_mode = new_spawn_mode
+            self.spawn_mode = [random.randint(1, 800) \
+                               for i in range(self.total_enemies)
+                              ]
 
         else:
             self.spawn_mode = spawn_mode
 
-    def start(self):
-        raise NotImplementedError
+    def draw(self, game_state):
+        """draw enemies on screen."""
+        terrain = game_state['_STAGE_DATA']['stage'].terrain
+        game_state['_STAGE_DATA']['enemies'] = []
+        if self.firstrun:
+            for player in game_state['PLAYERS']:
+                player.spawn_on_screen(game_state)
+
+            for enemy, x in zip(self.enemies, self.spawn_mode):
+                ground_level = terrain.get_spawn_point(terrain.get_last_unsolid(round(terrain.px_to_blocks(x))), enemy.size)
+                enemy.draw((x, ground_level), game_state['MAIN_DISPLAY_SURF'])
+                game_state['_STAGE_DATA']['enemies'].append(enemy)
+
+            self.firstrun = False
+
+        else:
+            for enemy in self.enemies:
+                enemy.move(game_state["PLAYERS"], game_state["MAIN_DISPLAY_SURF"])
+                enemy.draw(enemy.pos, game_state['MAIN_DISPLAY_SURF'])
+            for player in game_state['PLAYERS']:
+                player.update(game_state)
+
 
 
 class PeacefulScreen(Screen):
+
     def __init__(self):
         super().__init__((), (), None)

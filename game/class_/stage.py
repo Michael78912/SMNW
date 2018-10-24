@@ -1,18 +1,28 @@
+from threading import Thread
+
+from pygame.locals import QUIT
 import pygame as pg
 import os
+
 
 WHITE = (255, 255, 255)  # unbeaten
 GRAY = (211, 211, 211)  # beaten
 TEAL = (0, 128, 128)  # peaceful
-STAGE_SIZE = (10, 10)
+YELLOW = (128, 128, 0)
+BLACK = (0, 0, 0)
+STAGE_SIZE = (15, 15)
 
 
 class Stage:
     unlocked = False
     beaten = False
+    rect_padding = 8
+    game_state = {}
 
     def __init__(
             self,
+            name,
+            # name to be used by the game
             position_on_map,
             # (x, y) cartesian system
             all_screens,
@@ -45,6 +55,7 @@ class Stage:
         self.peaceful = peaceful
         self.has_icon = has_icon
         self.links_to = links_to
+        self.name = name
         self.terrain = terrain
         self.decorations = decorations
         # print(os.getcwd())
@@ -52,24 +63,107 @@ class Stage:
             os.getcwd(), 'music', 'smnwgameplay.mp3'
         )):
             print('opened successfully')
+
         self.music = os.path.join('music', 'smnwgameplay.mp3')
 
-        if comes_from.beaten and has_icon:
-            pg.draw.rect(surface, WHITE, position_on_map + STAGE_SIZE)
+        self.rect = pg.Rect(position_on_map, STAGE_SIZE)
 
-        elif self.beaten and has_icon:
-            pg.draw.rect(surface, GRAY, position_on_map + STAGE_SIZE)
+        rect = self.rect
+        left, top, width, height = rect.left, rect.top, rect.width, rect.height
+        self.box = pg.Rect(left - self.rect_padding, top - self.rect_padding,
+                width + (self.rect_padding * 2), height + (self.rect_padding * 2)
+            )
 
-        elif peaceful and has_icon:
-            pg.draw.rect(surface, TEAL, position_on_map + STAGE_SIZE)
+    def draw_on_map(self):
+        surface = self.drawing_surface
 
-    def start(self):
-        pg.music.stop()
-        pg.music.load(self.music)
-        pg.music.play()
+        if self.comes_from.beaten and self.has_icon:
+            self.rect = pg.draw.rect(
+                surface, WHITE, self.position_on_map + STAGE_SIZE)
+
+        elif self.beaten and self.has_icon:
+            self.rect = pg.draw.rect(
+                surface, GRAY, self.position_on_map + STAGE_SIZE)
+
+        if self.peaceful and self.has_icon:
+            self.rect = pg.draw.rect(
+                surface, TEAL, self.position_on_map + STAGE_SIZE)
+
+    def check_hover(self, pos):
+        """check to see if the mouse is hovering over. if it is,
+        dislpay a box around the level, and a name.
+        """
+
+        # print(left, top, width, height)
+
+        if self.box.collidepoint(*pos):
+            box = self.box
+            pg.draw.rect(self.drawing_surface, YELLOW, box, 1)
+
+            fontobj = pg.font.Font(os.path.join('data', 'MICHAEL`S FONT.ttf'), 20)
+            fontobj.set_bold(True)
+            surf = fontobj.render(self.name, True, BLACK)
+            surfrect = surf.get_rect()
+            surfrect.center = pos[0], pos[1] - 40
+
+            self.drawing_surface.blit(surf, surfrect)
 
 
-class _NullStage:
+     
+
+    def start_music(self):
+        """stop old music, play new music."""
+        if not self.peaceful:
+            # keep the theme music if it is a peaceful screen.
+            pg.mixer.music.fadeout(2000)
+            print('howdy?')
+            pg.mixer.music.load(self.music)
+            pg.mixer.music.play(-1)
+
+    def init(self, game_state):
+        """run the stage."""
+        self.game_state = game_state
+        Thread(target=self.start_music).start()
+        game_state['_STAGE_DATA'] = {
+            'screen_number': 0,
+            'screen': self.all_screens[0],
+            'stage': self,
+        }
+
+    def update(self):
+        state = self.game_state
+
+        terrain_surf = self.terrain.build_surface()
+
+        display = state['MAIN_DISPLAY_SURF']
+
+        display.fill((0, 0, 0))
+
+        current_screen = self.all_screens[state['_STAGE_DATA']['screen_number']]
+
+    
+        display.blit(terrain_surf, (0, 0))
+
+        current_screen.draw(state)
+
+        for event in pg.event.get():
+            check_quit(event)
+
+
+
+
+def check_quit(event):
+    """check if event is a quit event. if it is, quit."""
+    if event.type == QUIT:
+        pg.quit()
+        raise SystemExit
+
+
+
+class _NullStage(Stage):
+
+    def __init__(self):
+        pass
     position_on_map = None
     all_screens = None
     comes_from = None
@@ -78,3 +172,20 @@ class _NullStage:
     has_icon = None
     links_to = None
     beaten = True
+
+# d = pg.Surface((100, 100))
+# d.fill((255, 255, 255))
+# s = Stage(
+#     "Test Stage 0.0",
+#     position_on_map=(18, 569),
+#     all_screens=[PeacefulScreen],
+#     boss_screen=None,
+#     surface=d,
+#     terrain=Terrain('dirt', 'flat'),
+#     comes_from=None,
+#     peaceful=True,
+# )
+# s.draw_on_map()
+# s.check_hover((100, 100))
+
+# pg.image.save(d, r'C:\Users\Michael\Desktop\test_images\howdy.png')

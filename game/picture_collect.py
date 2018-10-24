@@ -14,7 +14,7 @@ import pprint
 from pygame.image import load
 import pygame as pg
 
-from database import *
+from database import ALL, COLOURS
 
 __author__ = 'Michael Gill'
 __version__ = '0.0'

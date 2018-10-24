@@ -65,8 +65,16 @@ class Terrain:
         for i in self.terrain2dlist:
             yield i
 
+    def __getitem__(self, pos):
+        arr = self.terrain2dlist_texts[self.template]['text']
+        return arr[pos[1]][pos[0]]
+
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
+
+    def get_solid(self, pos):
+        """return true if the block at pos is solid."""
+        return self.is_solid(self[pos])
 
     @staticmethod
     def is_solid(item):
@@ -254,6 +262,34 @@ class Terrain:
             os.mkdir(directory)
         for file in cls.terrain2dlist_texts:
             cls.terrain2dlist_texts[file]['text'].dump(os.path.join(directory, file + '.bin'))
+
+    def get_last_unsolid(self, y):
+        """get the index of the bottommost air or water block."""
+        arr = list(self.terrain2dlist_texts[self.template]['text'][:, y])
+        arr.reverse()
+
+        not_solid = ['+', '-', '~']
+
+        indices = [arr.index(i) if i in arr else 0 for i in not_solid]
+
+        bottom = len(arr) - min(filter(None, indices)) - 1
+
+        return bottom
+
+    def blocks_to_px(self, blocks):
+        """convert the blocks to pixels."""
+        return (self.terrain2dlist_texts[self.template]['size'] * blocks)
+
+    def get_spawn_point(self, blocks, size_of_obj):
+        """get a proper spawn point on Y axis for object.""" 
+        blk_size = self.terrain2dlist_texts[self.template]['size']
+        return (self.blocks_to_px(blocks) - size_of_obj * blk_size) + blk_size
+
+    def px_to_blocks(self, pixels):
+        """convert blocks to pixels"""
+        return round(self.terrain2dlist_texts[self.template]['size'] / pixels)
+
+
 # !w/ np- 66.2 seconds
 
 
@@ -308,8 +344,10 @@ def _change_colour_surface(surface, r, g, b):
 def saveall():
     Terrain('dirt').save_all('binaries')
 
+def main2():
+    t = Terrain('dirt', 'flat')
+    t.load_text()
+    print(t.get_last_unsolid(0))
+
 if __name__ == '__main__':
-    if len(sys.argv) != 1:
-        proc(sys.argv)
-    else:
-        saveall()
+    main2()

@@ -1,12 +1,29 @@
+import random
+
+from .character_image import CharacterImage
+from .smr_error import SMRError
+
+
+class FakeWeapon:
+
+    def __init__(self, colour):
+        self.colour = colour
+
+
 class Class:
     """
     base class for stickman ranger classes.
     """
 
+    attack_radius = 0
+    chance_of_motion = 4
+    _chance_of_update = 5
+
     def __init__(
             self,
             type,
             PlayerNum,
+            main_game_state,
             stats=(50, 0, 0, 0, 0),
             spec=None,
     ):
@@ -17,8 +34,9 @@ class Class:
         except ValueError:
             raise SMRError('invalid length of tuple "stat" argument')
         self.stats = stats
-
-        self.type_ = type_
+        self.image = CharacterImage(
+            type, FakeWeapon('green'), (0, 0), main_game_state)
+        self.type_ = type
         self.spec = spec
 
     def hit(self, damage):
@@ -45,11 +63,46 @@ class Class:
                     'Cannot assign a special value to class, cannot support special value.'
                 )
         # add stats
-        for index in range(len(args)):
+        for index in enumerate(args):
             self.stats[index] += args[index]
 
-    def spawn_on_screen(self, surface, screen):
+    def spawn_on_screen(self, game_state):
         """adds the character to the screen, the very beginning,
         on the top, but not above or underground.
         """
-        surface.blit(self.image, surface.terrain.array[0])
+        # surface.blit(self.image, surface.terrain.array[0])
+
+        terrain = game_state['_STAGE_DATA']['stage'].terrain
+        display = game_state['MAIN_DISPLAY_SURF']
+
+        x = 15    # we always want to spawn characters at x=15.
+
+        y = round(terrain.get_spawn_point(terrain.get_last_unsolid(
+            round(terrain.px_to_blocks(x))), self.image.sizey / 10))
+        print(x, y, "howdy fellers")
+        self.image.update_coords((x, y))
+        print(self.image.type_)
+        self.image.build_image(display)
+
+
+    def update(self, game_state):
+        """attempt to move, and attack."""
+        screen = game_state['_STAGE_DATA']['screen']
+        terrain = game_state['_STAGE_DATA']['stage'].terrain
+        enemies = game_state['_STAGE_DATA']['enemies']
+
+        if random.randint(0, self.chance_of_motion) == 1:
+            self.image.move_to_x(self.image.topright[0] + 1,
+                                 game_state['MAIN_DISPLAY_SURF'])
+
+        # game_state['MAIN_DISPLAY_SURF'].blit(self.picture, self.image.topright)
+
+        update = random.randint(0, self._chance_of_update) == 1
+
+        if not self.image.has_drawn:
+            #  needs to draw at least once. override.
+            update = True
+
+        self.image.build_image(game_state['MAIN_DISPLAY_SURF'], update)
+
+

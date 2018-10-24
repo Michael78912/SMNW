@@ -95,17 +95,18 @@ class CharacterImage(SMRSprite):
     this is a sprite that at this point, should really
     just be able to move around.
     """
+    has_drawn = False
     sizex = 7
-    sizey = 9
-    size = (5, 10)
-    head_radius = 2
+    sizey = 10
+    size = (sizex * 2, sizey * 2)
+    head_radius = 3
     head_diameter = head_radius * 2
 
     def __init__(self, type_, weapon,
                  pos: 'the topleft corner (in cartesian system)',
-                 main_game_state, event_queue):
+                 main_game_state):
 
-        SMRSprite.__init__(self, main_game_state, event_queue, pos)
+        SMRSprite.__init__(self, main_game_state, None, pos)
         self.type_ = type_
         self.weapon = weapon
         self.topleft = pos
@@ -113,81 +114,102 @@ class CharacterImage(SMRSprite):
         self.topright = pos[0] + self.sizex, pos[1]
         self.bottomright = pos[0] + self.sizex, pos[1] + self.sizey
 
-    def build_image(self, surface):
+    def build_image(self, surface, rebuild=True):
+        """constructs and draws the stickman to the 
+        screen. if rebuild is false, use the last image.
         """
-        constructs and draws the stickman to the 
-        screen.
-        """
+        if rebuild or not self.has_drawn:
+            self.has_drawn = True
+            print('drawing for the first time.')
 
-        # this is the image of the character
-        mainsurf = pg.surface.Surface(self.size)
+            # all these are making the right arm
+            rarm = [
+                [..., ...], [..., ...]
+            ]  # skeleton for 2D-lsit (First time to actually get to use Ellipsis!)
+            rarm[0][0] = self.topright[0] - (self.sizex // 2)
+            # X- coordinate should be directly on arm
+            rarm[0][1] = self.topright[1] - (self.sizey // 6 * 9)
+            # 3 quarters up the arm should be good
 
-        # all these are making the right arm
-        rarm = [
-            [..., ...], [..., ...]
-        ]  # skeleton for 2D-lsit (First time to actually get to use Ellipsis!)
-        rarm[0][0] = self.topright[0] - (self.sizex // 2)
-        # X- coordinate should be directly on arm
-        rarm[0][1] = self.topright[1] - (self.sizey // 6 * 9)
-        # 3 quarters up the arm should be good
+            # exactly on edge of player's hitbox
+            rarm[1][0] = self.topright[0]
 
-        # exactly on edge of player's hitbox
-        rarm[1][0] = self.topright[0]
+            # randomly on the top half of hitbox
+            rarm[1][1] = random.randint(self.topright[1] - (self.sizey // 2),
+                                        self.topright[1])
 
-        # randomly on the top half of hitbox
-        rarm[1][1] = random.randint(self.topright[1] - (self.sizey // 2),
-                                    self.topright[1])
+            self.rarm = rarm
 
-        self.rarm_rect = pg.draw.line(surface, COLOURS['beige'], rarm[0],
-                                      rarm[1])
+            self.rarm_rect = pg.draw.line(surface, COLOURS['beige'], rarm[0],
+                                          rarm[1], 2)
 
-        # larm is basically a repeat of rarm, only a few modifications
-        larm = [[..., ...], [..., ...]]
-        # same coordinate for part that attaches to body is OK
-        larm[0] = rarm[0]
-        larm[1][0] = self.topleft[0]
-        larm[1][1] = random.randint(self.topleft[1] - (self.sizey // 2),
-                                    self.topright[1])
+            # larm is basically a repeat of rarm, only a few modifications
+            larm = [[..., ...], [..., ...]]
+            # same coordinate for part that attaches to body is OK
+            larm[0] = rarm[0]
+            larm[1][0] = self.topleft[0]
+            larm[1][1] = random.randint(self.topleft[1] - (self.sizey // 2),
+                                        self.topright[1])
 
-        self.larm_rect = pg.draw.line(surface, COLOURS['beige'], *larm)
+            self.larm = larm
 
-        body1 = self.topright[0] - self.sizex // 2
-        body2 = self.topleft[1] - self.sizey
-        start = body1, body2
+            self.larm_rect = pg.draw.line(surface, COLOURS['beige'], larm[0], larm[1], 2)
 
-        body1 = self.bottomright[0] - self.sizex // 2
-        body2 = self.bottomright[1] - self.sizey
-        end = body1, body2
+            body1 = self.topright[0] - self.sizex // 2
+            body2 = self.topleft[1] - self.sizey
+            start = body1, body2
 
-        self.body = pg.draw.line(surface, COLOURS['beige'], start, end, 1)
+            body1 = self.bottomright[0] - self.sizex // 2
+            body2 = self.bottomright[1] - self.sizey
+            end = body1, body2
 
-        head_center_pos = self.topright[0] - self.sizex // 2, self.topleft[1] - (
-            self.sizey + 2)
-        self.head = {'center': head_center_pos, 'radius': self.head_radius}
-        self.head_rect = pg.draw.circle(surface, COLOURS['beige'],
-                                        head_center_pos, self.head_radius, 1)
+            self.start, self.end = start, end
 
-        rleg = [[..., ...], [..., ...]]
-        rleg[0] = end
-        rleg[1][0] = random.randint(self.bottomleft[0],
-                                    self.sizex // 2 + self.bottomleft[0])
-        rleg[1][1] = self.bottomleft[1]
-        self.rleg = rleg
+            self.body = pg.draw.line(surface, COLOURS['beige'], start, end, 2)
 
-        self.rleg_rect = pg.draw.line(surface, COLOURS['beige'], *rleg)
+            head_center_pos = self.topright[0] - self.sizex // 2, self.topleft[1] - (
+                self.sizey + 2)
+            self.head_center = head_center_pos
+            self.head = {'center': head_center_pos, 'radius': self.head_radius}
+            self.head_rect = pg.draw.circle(surface, COLOURS['beige'],
+                                            head_center_pos, self.head_radius, 1)
 
-        lleg = [[..., ...], [..., ...]]
-        lleg[0] = end
-        lleg[1][0] = random.randint(self.bottomright[0],
-                                    self.sizex // 2 + self.bottomright[0])
-        lleg[1][1] = self.bottomright[1]
-        self.lleg = lleg
-        self.lleg_rect = pg.draw.line(surface, COLOURS['beige'], *lleg)
+            rleg = [[..., ...], [..., ...]]
+            rleg[0] = end
+            rleg[1][0] = random.randint(self.bottomleft[0],
+                                        self.sizex // 2 + self.bottomleft[0])
+            rleg[1][1] = self.bottomleft[1]
+            self.rleg = rleg
+
+            self.rleg_rect = pg.draw.line(surface, COLOURS['beige'], rleg[0], rleg[1], 2)
+
+            lleg = [[..., ...], [..., ...]]
+            lleg[0] = end
+            lleg[1][0] = random.randint(self.bottomright[0],
+                                        self.sizex // 2 + self.bottomright[0])
+            lleg[1][1] = self.bottomright[1]
+            self.lleg = lleg
+            self.lleg_rect = pg.draw.line(surface, COLOURS['beige'], lleg[0], lleg[1], 2)
+
+            
+
+        else:
+            pg.draw.line(surface, COLOURS['beige'], self.rarm[0], self.rarm[1], 2)
+            pg.draw.line(surface, COLOURS['beige'], self.larm[0], self.larm[1], 2)
+            pg.draw.line(surface, COLOURS['beige'], self.rleg[0], self.rleg[1], 2)
+            pg.draw.line(surface, COLOURS['beige'], self.lleg[0], self.lleg[1], 2)
+            pg.draw.line(surface, COLOURS['beige'], self.start, self.end, 2)
+            pg.draw.circle(surface, COLOURS['beige'], self.head_center, self.head_radius, 1)
 
         if self.type_ == 'angel':
-            draw_halo(surface, self.head_rect.topleft, self.weapon.colour)
+                draw_halo(surface, self.head_rect.topleft, self.weapon.colour)
         else:
-            DEFAULT_WEAPONS[self.type_](surface, rarm[1], self.weapon.colour)
+            DEFAULT_WEAPONS[self.type_](surface, self.rarm[1], self.weapon.colour)
+
+
+
+
+
 
     def move_to_x(self, pos: 'x', surface, pixels=1, invisible=False):
         """
@@ -201,7 +223,8 @@ class CharacterImage(SMRSprite):
         current_pos = current - pixels if pos < current else current + pixels
         print(current_pos)
         self.update_coords((current_pos, self.topleft[1]))
-        self.build_image(surface)
+        # self.build_image(surface)
+
         return current_pos
 
     def move_to_y(self, pos: 'y', surface, pixels=1, invisible=False):
@@ -212,6 +235,8 @@ class CharacterImage(SMRSprite):
         self.update_coords((current_pos, self.topleft[1]))
         self.build_image(surface)
         return current_pos
+
+
 
     def move_to(self, pos: 'x / y', surface, pixels=1):
         coord = random.randrange(1)
@@ -255,9 +280,8 @@ class CharacterImage(SMRSprite):
 
 class WeaponDummy:
 
-    def __init__(self, image):
-        self.image = image
-
+    def __init__(self, colour):
+        self.colour = colour
     def __repr__(self):
         return 'WeaponDummy object with Surface %s' % self.image
 
