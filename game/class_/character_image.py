@@ -33,7 +33,7 @@ CLOCK = pg.time.Clock()
 
 
 
-def draw_sword(surface, armpoint, colour, length=12):
+def draw_sword(surface, armpoint, colour, length=16):
     """draws a sword on to armpoint (armpoint == hand?)"""
     colour = COLOURS[colour]
     point2 = armpoint[0], armpoint[1] - length
@@ -47,7 +47,6 @@ def draw_halo(surface, headtopleft, colour):
     width = 8
     height = 4
     rect = pg.Rect(left, top, width, height)
-    print(rect)
     return pg.draw.ellipse(surface, colour, rect, 1)
 
 
@@ -59,7 +58,6 @@ def draw_bow(surface, armpoint, colour):
     # print(rect)
     # pg.draw.arc(surface, colour, rect, angle1, angle2)
     pic = PICS['characters_parts']['bow'][colour]
-    print(pic)
 
     area = armpoint[0] - 2, armpoint[1] - 7
     surface.blit(pic, area)
@@ -98,6 +96,7 @@ class CharacterImage(SMRSprite):
     has_drawn = False
     sizex = 7
     sizey = 10
+    hitbox = (11, 26)
     size = (sizex * 2, sizey * 2)
     head_radius = 3
     head_diameter = head_radius * 2
@@ -114,13 +113,12 @@ class CharacterImage(SMRSprite):
         self.topright = pos[0] + self.sizex, pos[1]
         self.bottomright = pos[0] + self.sizex, pos[1] + self.sizey
 
-    def build_image(self, surface, rebuild=True):
+    def build_image(self, surface, colour, rebuild=True):
         """constructs and draws the stickman to the 
         screen. if rebuild is false, use the last image.
         """
         if rebuild or not self.has_drawn:
             self.has_drawn = True
-            print('drawing for the first time.')
 
             # all these are making the right arm
             rarm = [
@@ -140,7 +138,7 @@ class CharacterImage(SMRSprite):
 
             self.rarm = rarm
 
-            self.rarm_rect = pg.draw.line(surface, COLOURS['beige'], rarm[0],
+            self.rarm_rect = pg.draw.line(surface, colour, rarm[0],
                                           rarm[1], 2)
 
             # larm is basically a repeat of rarm, only a few modifications
@@ -153,7 +151,7 @@ class CharacterImage(SMRSprite):
 
             self.larm = larm
 
-            self.larm_rect = pg.draw.line(surface, COLOURS['beige'], larm[0], larm[1], 2)
+            self.larm_rect = pg.draw.line(surface, colour, larm[0], larm[1], 2)
 
             body1 = self.topright[0] - self.sizex // 2
             body2 = self.topleft[1] - self.sizey
@@ -165,13 +163,13 @@ class CharacterImage(SMRSprite):
 
             self.start, self.end = start, end
 
-            self.body = pg.draw.line(surface, COLOURS['beige'], start, end, 2)
+            self.body = pg.draw.line(surface, colour, start, end, 2)
 
             head_center_pos = self.topright[0] - self.sizex // 2, self.topleft[1] - (
                 self.sizey + 2)
             self.head_center = head_center_pos
             self.head = {'center': head_center_pos, 'radius': self.head_radius}
-            self.head_rect = pg.draw.circle(surface, COLOURS['beige'],
+            self.head_rect = pg.draw.circle(surface, colour,
                                             head_center_pos, self.head_radius, 1)
 
             rleg = [[..., ...], [..., ...]]
@@ -181,7 +179,7 @@ class CharacterImage(SMRSprite):
             rleg[1][1] = self.bottomleft[1]
             self.rleg = rleg
 
-            self.rleg_rect = pg.draw.line(surface, COLOURS['beige'], rleg[0], rleg[1], 2)
+            self.rleg_rect = pg.draw.line(surface, colour, rleg[0], rleg[1], 2)
 
             lleg = [[..., ...], [..., ...]]
             lleg[0] = end
@@ -189,26 +187,24 @@ class CharacterImage(SMRSprite):
                                         self.sizex // 2 + self.bottomright[0])
             lleg[1][1] = self.bottomright[1]
             self.lleg = lleg
-            self.lleg_rect = pg.draw.line(surface, COLOURS['beige'], lleg[0], lleg[1], 2)
+            self.lleg_rect = pg.draw.line(surface, colour, lleg[0], lleg[1], 2)
 
             
 
         else:
-            pg.draw.line(surface, COLOURS['beige'], self.rarm[0], self.rarm[1], 2)
-            pg.draw.line(surface, COLOURS['beige'], self.larm[0], self.larm[1], 2)
-            pg.draw.line(surface, COLOURS['beige'], self.rleg[0], self.rleg[1], 2)
-            pg.draw.line(surface, COLOURS['beige'], self.lleg[0], self.lleg[1], 2)
-            pg.draw.line(surface, COLOURS['beige'], self.start, self.end, 2)
-            pg.draw.circle(surface, COLOURS['beige'], self.head_center, self.head_radius, 1)
+            pg.draw.line(surface, colour, self.rarm[0], self.rarm[1], 2)
+            pg.draw.line(surface, colour, self.larm[0], self.larm[1], 2)
+            pg.draw.line(surface, colour, self.rleg[0], self.rleg[1], 2)
+            pg.draw.line(surface, colour, self.lleg[0], self.lleg[1], 2)
+            pg.draw.line(surface, colour, self.start, self.end, 2)
+            pg.draw.circle(surface, colour, self.head_center, self.head_radius, 1)
 
         if self.type_ == 'angel':
                 draw_halo(surface, self.head_rect.topleft, self.weapon.colour)
         else:
             DEFAULT_WEAPONS[self.type_](surface, self.rarm[1], self.weapon.colour)
 
-
-
-
+        self.rect = pg.Rect(self.topright, self.hitbox)
 
 
     def move_to_x(self, pos: 'x', surface, pixels=1, invisible=False):
@@ -221,7 +217,6 @@ class CharacterImage(SMRSprite):
         current = self.topleft[0]
 
         current_pos = current - pixels if pos < current else current + pixels
-        print(current_pos)
         self.update_coords((current_pos, self.topleft[1]))
         # self.build_image(surface)
 
@@ -231,7 +226,6 @@ class CharacterImage(SMRSprite):
         current = self.topleft[1]
 
         current_pos = current - pixels if pos < current else current + pixels
-        print(current_pos)
         self.update_coords((current_pos, self.topleft[1]))
         self.build_image(surface)
         return current_pos
@@ -262,8 +256,6 @@ class CharacterImage(SMRSprite):
                         self.internal_event(f)
                         continue
 
-            # print(threading.current_thread())
-            # print(new_pos)
             if not at_pos:
                 new_pos = self.move_to_x(pos, surface, pixels, invisible,
                                          *args, **kwargs)
@@ -285,62 +277,6 @@ class WeaponDummy:
     def __repr__(self):
         return 'WeaponDummy object with Surface %s' % self.image
 
-
-def main():
-    pg.init()
-    a = pg.display.set_mode((800, 400))
-    testsurf = pg.surface.Surface((2, 2))
-    testsurf.fill(COLOURS['green'])
-    t = Terrain('dirt', 'flattish')
-    t_surf = t.build_surface()
-    a.blit(t_surf, (0, 0))
-    print('blitted')
-    #d = CharacterImage('test', WeaponDummy(testsurf), (0, 0), {}, {})
-    #d.start_thread((200, 100), a)
-    print(
-        CharacterImage.get_topleft_coord(t,
-                                         *CharacterImage.find_closest_of(
-                                             t, '*')))
-    truecoord = CharacterImage.find_closest_of(
-        t, '*')[0], CharacterImage.find_closest_of(t, '*')[1]
-    print(
-        CharacterImage.get_topleft_coord(t, *truecoord),
-        CharacterImage.get_topleft_coord(t,
-                                         *CharacterImage.find_closest_of(
-                                             t, '*')))
-    # s.start_thread(CharacterImage.get_topleft_coord(t, *CharacterImage.find_closest_of(t, '#')), a)
-    # for i in range(100):
-    #     i = CharacterImage('test', WeaponDummy(testsurf), (0,0), {}, {})
-    #     i.start_thread((0, 0 ), a)
-    pause = events.Pause()
-    s = CharacterImage('test', WeaponDummy(testsurf),
-                       CharacterImage.get_topleft_coord(t, *truecoord), {}, {})
-    print(CharacterImage.get_topleft_coord(t, *truecoord))
-    s.start_thread(800, a)
-
-    while True:
-        #a.blit(PICS['Maps']['army'], CharacterImage.get_topleft_coord(t, *CharacterImage.find_closest_of(t, '*')))
-        # s.build_image(a)
-        for i in pg.event.get():
-            if i.type == QUIT:
-                print('hello?')
-                # cleanup and saving and stuff like that can go here, but for now time.sleep tests it.
-                # always remove the pause from _internal_events before putting
-                # Quit
-                os._exit(0)
-
-                #import time; time.sleep(1)
-
-        try:
-            pg.display.update()
-            a.fill(COLOURS['black'])
-            a.blit(t_surf, (0, 0))
-        except pg.error:
-            # os._exit is about to be called in a seperate thread
-            pass
-
-        print('updated')
-        CLOCK.tick(FPS)
 
 
 def main2():

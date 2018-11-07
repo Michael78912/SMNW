@@ -263,9 +263,9 @@ class Terrain:
         for file in cls.terrain2dlist_texts:
             cls.terrain2dlist_texts[file]['text'].dump(os.path.join(directory, file + '.bin'))
 
-    def get_last_unsolid(self, y):
+    def get_last_unsolid(self, x):
         """get the index of the bottommost air or water block."""
-        arr = list(self.terrain2dlist_texts[self.template]['text'][:, y])
+        arr = list(self.terrain2dlist_texts[self.template]['text'][:, x - 1])
         arr.reverse()
 
         not_solid = ['+', '-', '~']
@@ -278,58 +278,42 @@ class Terrain:
 
     def blocks_to_px(self, blocks):
         """convert the blocks to pixels."""
-        return (self.terrain2dlist_texts[self.template]['size'] * blocks)
+        return round(blocks * self.terrain2dlist_texts[self.template]['size'])
 
-    def get_spawn_point(self, blocks, size_of_obj):
+    def is_on_solid(self, x, y, size_of_obj):
+        """ return true if the object is on solid ground. if it is not, return false."""
+        arr = self.terrain2dlist_texts[self.template]['text'][:, x]
+        bottom = y + size_of_obj
+        print(bottom)
+        bottom_blocks = self.px_to_blocks(bottom)
+        print(self.px_to_blocks(x), bottom_blocks)
+
+        return self.get_solid((self.px_to_blocks(x), bottom_blocks))
+
+    def get_spawn_point(self, x, size_of_obj):
         """get a proper spawn point on Y axis for object.""" 
         blk_size = self.terrain2dlist_texts[self.template]['size']
-        return (self.blocks_to_px(blocks) - size_of_obj * blk_size) + blk_size
+        last_unsolid = self.blocks_to_px(self.get_last_unsolid(self.px_to_blocks(x)))
+        first_solid = last_unsolid + blk_size
+
+        return first_solid - size_of_obj
 
     def px_to_blocks(self, pixels):
         """convert blocks to pixels"""
-        return round(self.terrain2dlist_texts[self.template]['size'] / pixels)
+        return round(pixels / self.terrain2dlist_texts[self.template]['size'])
 
 
-# !w/ np- 66.2 seconds
+def is_in_air(pos, terrain, size):
+    """return true if the position is in air. if not, return false."""
+    array = terrain.terrain2dlist_texts[terrain.template]['text']
+    x, y = pos
+    y += size
+    column = array[:, terrain.px_to_blocks(x)]
+    block = column[terrain.px_to_blocks(y)]
+    print(block)
 
+    return terrain.is_air(block)
 
-def _main(image='dirt', template='flat'):
-    terrain = Terrain(image=image, template=template, use_numpy=1)
-    print(Terrain.terrain2dlist_texts)
-    print(Terrain.terrain2dlist_texts[template])
-    pic = terrain.build_surface()
-
-    import pygame
-    a = pygame.display.set_mode((800, 400))
-    pygame.display.set_caption('terrain viewer')
-    pygame.display.set_icon(PICS['Other']['next'])
-    a.blit(pic, (0, 0))
-    print('\n' * 100)
-    # for i in range(1000):
-    # 	for a in terrain.terrain2dlist_texts['flat']['text']:
-    # 		for i in a:
-    # 			print(i)
-
-    while True:
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                pygame.quit()
-                sys.stdout.close()
-                sys.stderr.close()
-                raise SystemExit
-        pygame.display.update()
-
-
-def proc(args):
-    file = args[1].split('.')[0].split('\\' if os.name == 'nt' else '/')[-1]
-    print(file)
-    try:
-        opt = args[2]
-
-    except IndexError:
-        opt = 'stone'
-
-    _main(template=file, image=opt)
 
 
 def _change_colour_surface(surface, r, g, b):
@@ -347,7 +331,8 @@ def saveall():
 def main2():
     t = Terrain('dirt', 'flat')
     t.load_text()
-    print(t.get_last_unsolid(0))
+    print(t.terrain2dlist_texts[t.template]['text'][:, 1])
+    print(is_in_air((100, 315), t, 5))
 
 if __name__ == '__main__':
     main2()

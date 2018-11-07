@@ -9,8 +9,11 @@ DEF_SIZE = 1
 
 
 class EnemyHead:
+    cached_colours = {}
     def __init__(self, type_str, colour, size=DEF_SIZE):
         print(size)
+        self.type_str = type_str
+        self.colour = colour
         self.size_px = size * 10
         img = PICS['heads'][type_str][colour].copy()
         self.head = pygame.transform.scale(img, (size * 10, size * 10))
@@ -19,8 +22,15 @@ class EnemyHead:
         self.name = colour + '_' + type_str
         self.pretty_name = ' '.join((colour, type_str)).title()
 
-    def get_image(self):
-        return self.head
+    def get_image(self, colour_override=None):
+        if colour_override is None:
+            return self.head
+
+        # return a copy of the overridden image.
+        pic = PICS['heads'][self.type_str][colour_override].copy()
+        change_alpha_to_colour(pic, {100: COLOURS['light ' + colour_override]})
+        pic = pygame.transform.scale(pic, (self.size_px, self.size_px))
+        return pic
 
 
 def main():

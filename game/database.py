@@ -11,8 +11,10 @@ import save
 import class_ as _class_
 from class_.sprite import SMRSprite as SpriteUtils
 
-SURFACE = _pg.display.set_mode((800, 600))
 _pg.display.set_caption("Stickman's New World")
+_pg.display.set_icon(_pg.image.load(os.path.join('data', 'game_icon.png')))
+_pg.mouse.set_visible(False)
+SURFACE = _pg.display.set_mode((800, 600))
 
 _HOME = os.getenv('USERPROFILE') or os.getenv("HOME")
 SAVE_DIR = os.path.join(_HOME, '.stickman_new_world')
@@ -99,26 +101,44 @@ ALL_LEVELS = {
                 COLOURS['blue'],
                 _class_.EnemyHead(
                     'sad_box',
-                    'red',
-                    1,
+                    'yellow',
+                    14,
                 ),
                 (),
                 (),
-                _class_.Attack(),
-                1
+                _class_.Attack(1, 100),
+                30,
+                5,
+                14,
             ): 6,
-            _class_.Blob(
+                _class_.Blob(
                 COLOURS['red'],
                 _class_.EnemyHead(
                     'normal',
                     'green',
-                    6,
-                    ),
+                    2,
+                ),
                 (),
                 (),
-                _class_.Attack(),
-                6,
-                ): 3,
+                _class_.Attack(1, 100),
+                30,
+                5,
+                2,
+            ): 3,
+                _class_.Stationary(
+                COLOURS['yellow'],
+                _class_.EnemyHead(
+                    'triangle',
+                    'blue',
+                    4,
+                ),
+                (),
+                (),
+                _class_.Attack(1, 100),
+                30,
+                5,
+                4,
+            ): 10,
             },
         )],
         boss_screen=None,
@@ -133,7 +153,25 @@ ALL_SCREENS = []
 
 ALL_WEAPONS = []
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# "remember to add a 'Spicy Shot' magic book later." (Alvin Gu, Oct 26, 2018) #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+DEFAULT_WEAPONS = {
+    'angel': _class_.Weapon('knife', 'Knife', 'black', 1, _class_.Attack(4, 20), 3),
+    'swordsman': _class_.Weapon('sword', 'Sword', 'gray', 1, _class_.Attack(7, 60), 7),
+    'spearman': _class_.Weapon('spear', 'Spear', 'gray', 1, _class_.Attack(5, 50), 12),
+    'archer': _class_.Weapon('bow', 'Bow', 'brown', 1, _class_.Attack(3, 30), 130),
+    'wizard': _class_.Weapon('wand', "Beginner's Spellbook", 'blue', 1, _class_.Attack(15, 120), 70),
+
+}
+
 ALL_COMPOS = []
+
+
+import picture_collect
+
+PICS = picture_collect.gather_pics('data')
 
 if os.path.exists(SAVE_DIR):
     _SAVE = save.read_file()
@@ -150,6 +188,7 @@ if os.path.exists(SAVE_DIR):
         'GAME_DATA': _SAVE,
         'INVENTORY': _INV,
         'MAIN_DISPLAY_SURF': SURFACE,
+        'CURSOR': PICS['cursor'],
     }
 else:
     MAIN_GAME_STATE = {
@@ -158,9 +197,5 @@ else:
         'GAME_DATA': {},
         'INVENTORY': {},
         'MAIN_DISPLAY_SURF': SURFACE,
+        'CURSOR': PICS['cursor'],
     }
-
-
-import picture_collect
-
-PICS = picture_collect.gather_pics('data')

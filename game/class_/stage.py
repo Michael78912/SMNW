@@ -1,6 +1,6 @@
 from threading import Thread
 
-from pygame.locals import QUIT
+from pygame.locals import QUIT, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION
 import pygame as pg
 import os
 
@@ -130,7 +130,7 @@ class Stage:
             'stage': self,
         }
 
-    def update(self):
+    def update(self, events):
         state = self.game_state
 
         terrain_surf = self.terrain.build_surface()
@@ -146,8 +146,14 @@ class Stage:
 
         current_screen.draw(state)
 
-        for event in pg.event.get():
+        for event in events:
             check_quit(event)
+
+            if event.type == MOUSEBUTTONDOWN:
+                state['MOUSEDOWN'] = True
+
+            elif event.type == MOUSEMOTION:
+                state['MOUSEDOWN'] = False
 
 
 

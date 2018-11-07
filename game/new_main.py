@@ -4,6 +4,7 @@ for starting the game.
 
 from argparse import Namespace
 import enum
+import copy
 import os
 
 
@@ -216,6 +217,8 @@ def main():
     continue_ = True
 
     while continue_:
+        SURFACE.blit(PICS['title_screen'], (0, 0))
+        SURFACE.blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
         for event in pg.event.get():
             check_quit(event)
 
@@ -248,6 +251,7 @@ def main():
                     func = lbl.function
                     continue_ = False
 
+        SURFACE.blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
         pg.display.update()
         CLOCK.tick(FPS)
 
@@ -470,7 +474,7 @@ def new_game():
             box.draw(SURFACE)
 
         for i in char_imgs:
-            i.build_image(SURFACE)
+            i.build_image(SURFACE, COLOURS['beige'], False)
 
         for i in char_lbls:
             i.draw(SURFACE)
@@ -505,24 +509,19 @@ def new_game():
 
             character.update_coords(coords)
 
-            character.build_image(SURFACE)
+            character.build_image(SURFACE, COLOURS['beige'], False)
 
             # pg.display.update()
         # print((str(num_selected) + "\n") * 10)
 
+        SURFACE.blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
         pg.display.update()
         CLOCK.tick(24)
 
     continue_ = True
     MAIN_GAME_STATE["AREA"] = database.Area.MAP
     MAIN_GAME_STATE["PLAYERS"] = get_characters_from_images([i[0] for i in chosen])
-    print(MAIN_GAME_STATE["PLAYERS"])
 
-
-    # while continue_:
-    #     gameplay.draw_map()
-    #     gameplay.handle_map()
-    #     pg.display.update()
 
     gameplay.main()
 
@@ -542,9 +541,11 @@ def get_characters_from_images(images):
         'spearman': class_.Spearman,
         'wizard': class_.Wizard,
     }
+
     num = 1
+
     for name in names:
-        characters.append(namestotypes[name](num, MAIN_GAME_STATE))
+        characters.append(namestotypes[name](num, MAIN_GAME_STATE, copy.copy(database.DEFAULT_WEAPONS[name])))
         num += 1
 
     return characters

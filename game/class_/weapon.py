@@ -8,13 +8,12 @@ try:
 except ImportError:
     from ._internal import *
 
-print(PICS)
-
 __all__ = ['Weapon']
 
 
 class Weapon:
-    def __init__(self, klass, colour, level, alphatocolour=None):
+    cooldown = 0
+    def __init__(self, klass, name, colour, level, attack, range, alphatocolour=None):
         self.largeicon = PICS['weapons']['large_icon'][klass][repr(level)][
             colour]
         self.smallicon = PICS['weapons']['small_icon'][klass][repr(level)][
@@ -23,12 +22,28 @@ class Weapon:
             change_alpha_to_colour(self.largeicon, alphatocolour)
             change_alpha_to_colour(self.smallicon, alphatocolour)
 
+        self.name = name
+        self.colour = colour
+        self.range = range
+        self.attack = attack
+
         rect = self.largeicon.get_rect()
         pos = rect.bottomright[0] - 4, rect.bottomright[1] - 9
         font = pygame.font.Font('freesansbold.ttf', 8)
         print(font.size('8'))
         surf = font.render(repr(level), True, COLOURS['black'])
         self.largeicon.blit(surf, pos)
+
+    def can_attack(self):
+        """return true if the weapon is able to attack."""
+        return self.cooldown == 0
+
+    def update(self):
+        if self.cooldown != 0: self.cooldown -= 1
+
+    def attack_enemy(self, target):
+        self.cooldown = self.attack.cooldown
+        target.hit(self.attack)
 
 
 if __name__ == '__main__':

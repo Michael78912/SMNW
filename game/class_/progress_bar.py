@@ -19,13 +19,13 @@ class ProgressBar:
     # put it forward once
     """
 
-    def __init__(self, increments_to_full, pos, width, height, alpha=200, direction='backwards', colour=(211, 211, 211)):
+    def __init__(self, increments_to_full, pos, width, height, alpha=200, righttoleft=True, colour=(211, 211, 211)):
         self.increments_to_full = increments_to_full
         self.pos = pos
         self.width = width
         self.height = height
         self.colour = colour
-        self.direction = direction
+        self.righttoleft = righttoleft
         self.full = 0
 
         self.first_surf = pygame.surface.Surface((width, height))
@@ -44,11 +44,9 @@ class ProgressBar:
     def __ne__(self, other):
         return self.__dict__ != other.__dict__
 
-    def draw(self, surface, auto_update=True):
+    def draw(self, surface):
         surface.blit(self.first_surf, self.pos)
 
-        if auto_update:
-            pygame.display.update()
 
     def increment(self, surface, increment, auto_update=True):
         """
