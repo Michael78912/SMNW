@@ -87,6 +87,7 @@ class SMRSprite:
 
     def update_coords(self, pos):
         self.topleft = pos
+        self.x, self.y = pos
         self.bottomleft = pos[0], pos[1] + self.sizey
         self.topright = pos[0] + self.sizex, pos[1]
         self.bottomright = pos[0] + self.sizex, pos[1] + self.sizey

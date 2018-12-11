@@ -282,8 +282,13 @@ main()
 """a file for representing an attack."""
 
 class Attack:
-    def __init__(self):
-        passtry:
+    def __init__(self, damage, cooldown):
+        self.damage = damage
+        self.cooldown = cooldown
+
+    def __repr__(self):
+    	return "{}(damage={}, cooldown={})".format(self.__class__.__name__, self.damage, self.cooldown)
+try:
     from _internal import PICS
 except ImportError:
     from ._internal import PICS
@@ -360,36 +365,36 @@ DEFAULT_STATS = (50, 0, 0, 0, 0)
 class Swordsman(Class):
     image = PICS['characters']['swordsman']
 
-    def __init__(self, player_num, main_game_state, stats=DEFAULT_STATS):
-        Class.__init__(self, 'swordsman', player_num, main_game_state, stats)
+    def __init__(self, player_num, main_game_state, weapon, stats=DEFAULT_STATS):
+        Class.__init__(self, 'swordsman', player_num, weapon, main_game_state, stats)
 
 
 class Angel(Class):
     image = PICS['characters']['angel']
 
-    def __init__(self, player_num, main_game_state,stats=DEFAULT_STATS):
-        Class.__init__(self, 'angel', player_num, main_game_state, stats)
+    def __init__(self, player_num, main_game_state, weapon, stats=DEFAULT_STATS):
+        Class.__init__(self, 'angel', player_num, weapon, main_game_state, stats)
 
 
 class Archer(Class):
     image = PICS['characters']['archer']
 
-    def __init__(self, player_num, main_game_state,stats=DEFAULT_STATS):
-        Class.__init__(self, 'archer', player_num, main_game_state, stats)
+    def __init__(self, player_num, main_game_state, weapon, stats=DEFAULT_STATS):
+        Class.__init__(self, 'archer', player_num, weapon, main_game_state, stats)
 
 
 class Spearman(Class):
     image = PICS['characters']['spearman']
 
-    def __init__(self, player_num, main_game_state,stats=DEFAULT_STATS):
-        Class.__init__(self, 'spearman', player_num, main_game_state, stats)
+    def __init__(self, player_num, main_game_state, weapon, stats=DEFAULT_STATS):
+        Class.__init__(self, 'spearman', player_num, weapon, main_game_state, stats)
 
 
 class Wizard(Class):
     image = PICS['characters']['wizard']
 
-    def __init__(self, player_num, main_game_state,stats=DEFAULT_STATS):
-        Class.__init__(self, 'wizard', player_num, main_game_state, stats)
+    def __init__(self, player_num, main_game_state, weapon, stats=DEFAULT_STATS):
+        Class.__init__(self, 'wizard', player_num, weapon, main_game_state, stats)
 """
 character_image.py
 this is basically a test module at this point
@@ -488,6 +493,7 @@ class CharacterImage(SMRSprite):
     has_drawn = False
     sizex = 7
     sizey = 10
+    hitbox = (11, 26)
     size = (sizex * 2, sizey * 2)
     head_radius = 3
     head_diameter = head_radius * 2
@@ -504,7 +510,7 @@ class CharacterImage(SMRSprite):
         self.topright = pos[0] + self.sizex, pos[1]
         self.bottomright = pos[0] + self.sizex, pos[1] + self.sizey
 
-    def build_image(self, surface, rebuild=True):
+    def build_image(self, surface, colour, rebuild=True):
         """constructs and draws the stickman to the 
         screen. if rebuild is false, use the last image.
         """
@@ -529,7 +535,7 @@ class CharacterImage(SMRSprite):
 
             self.rarm = rarm
 
-            self.rarm_rect = pg.draw.line(surface, COLOURS['beige'], rarm[0],
+            self.rarm_rect = pg.draw.line(surface, colour, rarm[0],
                                           rarm[1], 2)
 
             # larm is basically a repeat of rarm, only a few modifications
@@ -542,7 +548,7 @@ class CharacterImage(SMRSprite):
 
             self.larm = larm
 
-            self.larm_rect = pg.draw.line(surface, COLOURS['beige'], larm[0], larm[1], 2)
+            self.larm_rect = pg.draw.line(surface, colour, larm[0], larm[1], 2)
 
             body1 = self.topright[0] - self.sizex // 2
             body2 = self.topleft[1] - self.sizey
@@ -554,13 +560,13 @@ class CharacterImage(SMRSprite):
 
             self.start, self.end = start, end
 
-            self.body = pg.draw.line(surface, COLOURS['beige'], start, end, 2)
+            self.body = pg.draw.line(surface, colour, start, end, 2)
 
             head_center_pos = self.topright[0] - self.sizex // 2, self.topleft[1] - (
                 self.sizey + 2)
             self.head_center = head_center_pos
             self.head = {'center': head_center_pos, 'radius': self.head_radius}
-            self.head_rect = pg.draw.circle(surface, COLOURS['beige'],
+            self.head_rect = pg.draw.circle(surface, colour,
                                             head_center_pos, self.head_radius, 1)
 
             rleg = [[..., ...], [..., ...]]
@@ -570,7 +576,7 @@ class CharacterImage(SMRSprite):
             rleg[1][1] = self.bottomleft[1]
             self.rleg = rleg
 
-            self.rleg_rect = pg.draw.line(surface, COLOURS['beige'], rleg[0], rleg[1], 2)
+            self.rleg_rect = pg.draw.line(surface, colour, rleg[0], rleg[1], 2)
 
             lleg = [[..., ...], [..., ...]]
             lleg[0] = end
@@ -578,26 +584,24 @@ class CharacterImage(SMRSprite):
                                         self.sizex // 2 + self.bottomright[0])
             lleg[1][1] = self.bottomright[1]
             self.lleg = lleg
-            self.lleg_rect = pg.draw.line(surface, COLOURS['beige'], lleg[0], lleg[1], 2)
+            self.lleg_rect = pg.draw.line(surface, colour, lleg[0], lleg[1], 2)
 
             
 
         else:
-            pg.draw.line(surface, COLOURS['beige'], self.rarm[0], self.rarm[1], 2)
-            pg.draw.line(surface, COLOURS['beige'], self.larm[0], self.larm[1], 2)
-            pg.draw.line(surface, COLOURS['beige'], self.rleg[0], self.rleg[1], 2)
-            pg.draw.line(surface, COLOURS['beige'], self.lleg[0], self.lleg[1], 2)
-            pg.draw.line(surface, COLOURS['beige'], self.start, self.end, 2)
-            pg.draw.circle(surface, COLOURS['beige'], self.head_center, self.head_radius, 1)
+            pg.draw.line(surface, colour, self.rarm[0], self.rarm[1], 2)
+            pg.draw.line(surface, colour, self.larm[0], self.larm[1], 2)
+            pg.draw.line(surface, colour, self.rleg[0], self.rleg[1], 2)
+            pg.draw.line(surface, colour, self.lleg[0], self.lleg[1], 2)
+            pg.draw.line(surface, colour, self.start, self.end, 2)
+            pg.draw.circle(surface, colour, self.head_center, self.head_radius, 1)
 
         if self.type_ == 'angel':
                 draw_halo(surface, self.head_rect.topleft, self.weapon.colour)
         else:
             DEFAULT_WEAPONS[self.type_](surface, self.rarm[1], self.weapon.colour)
 
-
-
-
+        self.rect = pg.Rect(self.topright, self.hitbox)
 
 
     def move_to_x(self, pos: 'x', surface, pixels=1, invisible=False):
@@ -610,7 +614,6 @@ class CharacterImage(SMRSprite):
         current = self.topleft[0]
 
         current_pos = current - pixels if pos < current else current + pixels
-        print(current_pos)
         self.update_coords((current_pos, self.topleft[1]))
         # self.build_image(surface)
 
@@ -681,7 +684,35 @@ def main2():
 
 if __name__ == '__main__':
     main2()
+"""damagenumbers- an enemy will have a list of damage numbers.
+it will display them all over time.
 """
+import os
+import random
+
+import pygame as pg
+GRAY = (220, 220, 220)
+
+class DamageNumber:
+	"""display as a number coming from the enemy"""
+	lifespan = 60
+	dead = False
+	font = pg.font.Font(os.path.join('data', 'Roboto-Regular.ttf'), 9)
+
+	def __init__(self, enemy, damage):
+		"""initiate instance>"""
+		self.surf = self.font.render(str(damage), False, GRAY)
+		self.rect = self.surf.get_rect()
+		self.rect.center = (enemy.pos[0] + enemy.size_px // 2) + random.randint(-3, 3), enemy.pos[1] - 10
+
+	def update(self, surface):
+		"""update and draw to surface"""
+		if self.lifespan == 0:
+			self.dead = True
+		if not self.dead:
+			surface.blit(self.surf, self.rect)
+			self.rect.y = self.rect.y - 1
+			self.lifespan -= 1"""
 drop.py
 this is a base class, that is to derive compos/weapons from (and anything i might add later ;))
 definitely not to be used directly.
@@ -710,13 +741,22 @@ class DropItem:
 
     def draw_small(self, pos):
         self.surface.blit(self.smallicon, pos)
-try:
-    from enemy import Enemy
-except ImportError:
-    from .enemy import Enemy
+"""enemies.py- contains enemies that are used in SMNW.
+may create a seperate library for these one day, but until I 
+decide to use something other than Blob and Stationary, I'll be fine.
+"""
+
+
 import random
 
+
+from .enemy import Enemy
+from . import terrain
+
+
 __all__ = ['Blob', 'Stationary']
+
+GRAY = (220, 220, 220)
 
 BACKWARDS = 'backwards'
 FORWARDS = 'forwards'
@@ -731,11 +771,17 @@ class Blob(Enemy):
     _amount = 0
     body = None
     chance_of_motion = 3
+    _damaging = -1
+    fell_on_last = 0
     on_screen = False
     intelligence = 4
 
-    def __init__(self, colour, head, drops, drop_rates, attack, size):
-        super().__init__(colour)
+    def __init__(self, colour, head, drops, drop_rates, attack, health, range, size):
+        super().__init__()
+
+        self.colour = colour
+        self.health = health
+        self.range = range
         self._num = self._amount + 1
         self.__class__._amount += 1
         self.head = head
@@ -749,37 +795,67 @@ class Blob(Enemy):
         self.drop_rates = drop_rates
         self.attack = attack
 
+    # def hit(self, attack):
+    #     super().hit(attack)
+    #     dmg = self.damage_font.render(str(self.health), False, GRAY)
+    #     rect = dmg.get_rect()
+    #     rect.center = self.pos[0] + self.size_px // 2, self.pos[1] - 10
+    #     pg.display.get_surface().blit(dmg, rect)
 
     def __repr__(self):
         return "Blob enemy type " + str(self._num)
 
-    def copy(self):
-        """return a new instance of Blob exactly equivalent to self."""
-        new = self.__class__(self.colour, self.head, self.drop_rates, self.attack, self.size)
-        new.__dict__ = self.__dict__
-        return new
-
-    def draw(self, coordinates, surface):
+    def draw(self, coordinates, surface, colour=None):
         """draws enemy to screen at coordinates. 
         using cartesian system.
         """
         self.on_screen = True
-        surface.blit(self.head.get_image(), coordinates)
+        surface.blit(self.head.get_image(colour), coordinates)
         self.pos = coordinates
 
-    def move(self, all_players, surface):
+    def move(self, all_players, surface, terrain_obj):
+        # pylint: disable=too-many-locals
         """moves the enemy towards the closest player to it.
-        the Blob does not move too much, and has a 1/4 (intelligence) 
+        the Blob does not move too much, and has a 1/4 (intelligence)
         chance of moving the way away from the players.
         """
         if random.randint(1, self.chance_of_motion) == 1:
+            # innocent until proven guilty. (of being in a pit)
+            can_move = True
+
+            in_air = terrain.is_in_air(self.pos, terrain_obj, self.size_px)
+
+            current_block_x = terrain_obj.px_to_blocks(self.pos[0])
+            current_block_y = terrain_obj.px_to_blocks(self.pos[1])
+
+            next_column = list(terrain_obj.terrain2dlist_texts[terrain_obj.template]
+                               ['text'][:, current_block_x - 1])
+
+            top_levels = {i if obj == '*' else None for i,
+                          obj in enumerate(next_column)}
+            top_levels.remove(None)
+
+            if in_air:
+                # fall two pixels, because enemy is in air
+                self.fell_on_last = 1
+                self.pos = self.pos[0], self.pos[1] + 2
+
+            elif self.fell_on_last == 1:
+                self.fell_on_last = 0
+                # for some strange reason that is completely beyond me,
+                # all enemies seem to stay 4 pixels above ground after falling.
+                # this fixes that.
+                self.pos = self.pos[0], self.pos[1] + 4
+
             current_x = self.pos[0]
 
-            possible_destinations = [player.image.topright[0] for player in all_players]
+            possible_destinations = [player.image.topright[0]
+                                     for player in all_players]
 
             distances = []
             for i in possible_destinations:
-                distances.append(current_x - i if i <= current_x else i - current_x)
+                distances.append(current_x - i if i <=
+                                 current_x else i - current_x)
 
             distance = min(distances)
 
@@ -787,38 +863,117 @@ class Blob(Enemy):
 
             move_proper = random.randint(1, self.intelligence) == 1
 
-
             if dest >= current_x:
                 # greater. want to move to the right.
                 if move_proper:
+                    move_right = False
                     self.pos = (self.pos[0] - 1, self.pos[1])
                 else:
+                    move_right = True
                     self.pos = (self.pos[0] + 1, self.pos[1])
-
-                
 
             else:
                 # smaller. want to move to left.
                 if move_proper:
+                    move_right = False
                     self.pos = (self.pos[0] + 1, self.pos[1])
                 else:
+                    move_right = True
                     self.pos = (self.pos[0] - 1, self.pos[1])
 
 
 class Stationary(Blob):
     """similar to blob, but does n ot move."""
-    def move(self, _, _2): pass
+    def move(*_): pass
+import os.path
+
+import pygame as pg
+
+from .smr_error import SMRError
+from .damagenumbers import DamageNumber
 
 
 class Enemy:
     """base class for stickmanranger enemies"""
+    id = 0
+    health = 0
+    damage_font = pg.font.Font(os.path.join('data', 'Roboto-Regular.ttf'), 9)
+    damage_numbers = []
+    dead = False
+    # I dont know why the hell it needs to start at -3, not 0, but it does
+    _enemies = -3
+    in_damage_state = False
+    pos = (0, 0)
 
-    def __init__(self, colour):
+    def __init__(self):
+        Enemy._enemies += 1
+        self.id = self._enemies
+
+    def hit(self, attack):
+        self.health -= attack.damage
+        # become red for 4 frames.
+        self._damaging = 4
+        self.damage_numbers.append(DamageNumber(self, attack.damage))
+
+    def __copy__(self):
+        return self.__class__(
+            self.colour,
+            self.head,
+            self.drops,
+            self.drop_rates,
+            self.attack,
+            self.health,
+            self.range,
+            self.size,
+        )
+
+        
+    def update(self, game_state):
+        self.damage_numbers = [x for x in self.damage_numbers if not x.dead]
+        #print(self.damage_numbers)
+        if not self.dead:
+
+            for i in self.damage_numbers:
+                i.update(game_state['MAIN_DISPLAY_SURF'])
+            
+            colour = None
+
+            if self.in_damage_state:
+                colour = 'red'
+
+            self.in_damage_state = self._damaging >= 0
+            self._damaging -= 1
+
+            self.draw(self.pos, game_state['MAIN_DISPLAY_SURF'], colour)
+
+            if self.health <= 0:
+                i = get_enemy_by_id(game_state['_STAGE_DATA']['enemies'], self.id)
+                print('lol. enemy with id %s is now IN THE VOID.' % self.id)
+                del game_state['_STAGE_DATA']['enemies'][i]
+                self.dead = True
+
+
+    def draw(*_):
+        """to be overridden"""
         pass
 
+    def move(*_):
+        """to be overridden (unless stationary)"""
+        pass
 
     def __repr__(self):
-    	return "{} enemy colour {} size {}".format(self.__class__.__name__, self.colour, self.size)import pygame
+        return "{} enemy colour {} size {}".format(self.__class__.__name__, self.colour, self.size)
+
+
+def get_enemy_by_id(enemies, id_):
+    for i,e  in enumerate(enemies):
+        print("%s with id %s. looking for %s" % (e, e.id, id_))
+        if e.id == id_:
+            return i
+
+    raise SMRError('Enemy with id %d could not be found' % id_)
+
+import pygame
 
 try:
     from _internal import *
@@ -829,8 +984,11 @@ DEF_SIZE = 1
 
 
 class EnemyHead:
+    cached_colours = {}
     def __init__(self, type_str, colour, size=DEF_SIZE):
         print(size)
+        self.type_str = type_str
+        self.colour = colour
         self.size_px = size * 10
         img = PICS['heads'][type_str][colour].copy()
         self.head = pygame.transform.scale(img, (size * 10, size * 10))
@@ -839,8 +997,15 @@ class EnemyHead:
         self.name = colour + '_' + type_str
         self.pretty_name = ' '.join((colour, type_str)).title()
 
-    def get_image(self):
-        return self.head
+    def get_image(self, colour_override=None):
+        if colour_override is None:
+            return self.head
+
+        # return a copy of the overridden image.
+        pic = PICS['heads'][self.type_str][colour_override].copy()
+        change_alpha_to_colour(pic, {100: COLOURS['light ' + colour_override]})
+        pic = pygame.transform.scale(pic, (self.size_px, self.size_px))
+        return pic
 
 
 def main():
@@ -1398,16 +1563,20 @@ class Joker:
 
 
 print(Joker().joke)
+"""klass.py (I know it's spelt wrong, OK)?
+base class for all character classes in SMNW. handles 
+image generation, spawning, and default movement, and attacking.
+"""
 import random
 
+from . import terrain
 from .character_image import CharacterImage
 from .smr_error import SMRError
 
 
-class FakeWeapon:
+BEIGE = (232, 202, 145)
 
-    def __init__(self, colour):
-        self.colour = colour
+
 
 
 class Class:
@@ -1415,14 +1584,24 @@ class Class:
     base class for stickman ranger classes.
     """
 
+    # I, personally think that a character class in a reasonably large
+    # game should be allowed to have at least a few more attributes than
+    # seven. I am so, so, sorry if you hate me, pylint.
+    # and too many arguments to __init__? whats that about?
+
+    # pylint: disable=too-many-instance-attributes, too-many-arguments
+
     attack_radius = 0
     chance_of_motion = 4
+    max_motion = 3
+    jump_height = 10
     _chance_of_update = 2
 
     def __init__(
             self,
-            type,
-            PlayerNum,
+            type_,
+            player_num,
+            weapon,
             main_game_state,
             stats=(50, 0, 0, 0, 0),
             spec=None,
@@ -1434,10 +1613,15 @@ class Class:
         except ValueError:
             raise SMRError('invalid length of tuple "stat" argument')
         self.stats = stats
+        self.player_num = player_num
+        self.weapon = weapon
         self.image = CharacterImage(
-            type, FakeWeapon('gray'), (0, 0), main_game_state)
-        self.type_ = type
+            type_, weapon, (0, 0), main_game_state)
+        self.type_ = type_
         self.spec = spec
+
+    def __repr__(self):
+        return """character number {} type {}""".format(self.player_num, self.type_)
 
     def hit(self, damage):
         'takes damage by specified amount'
@@ -1446,11 +1630,6 @@ class Class:
     def heal(self, damage):
         'heals by specified amount'
         self.health += damage
-
-    @staticmethod  # self argument not needed
-    def attack(damage, enemy):
-        'lowers the enemy`s health by damage'
-        enemy.health -= damage
 
     def level_up(self, *args):
         'raises characters stats by specified amount'
@@ -1472,39 +1651,125 @@ class Class:
         """
         # surface.blit(self.image, surface.terrain.array[0])
 
-        terrain = game_state['_STAGE_DATA']['stage'].terrain
         display = game_state['MAIN_DISPLAY_SURF']
 
         x = 15    # we always want to spawn characters at x=15.
 
-        y = terrain.get_spawn_point(x, self.image.sizey)
-        # print(x, y, "howdy fellers")
+        y = game_state['_STAGE_DATA']['stage'].terrain.get_spawn_point(x, self.image.sizey)
         self.image.update_coords((x, y))
-        # print(self.image.type_)
-        self.image.build_image(display)
-
+        self.image.build_image(display, BEIGE)
 
     def update(self, game_state):
         """attempt to move, and attack."""
-        screen = game_state['_STAGE_DATA']['screen']
-        terrain = game_state['_STAGE_DATA']['stage'].terrain
-        enemies = game_state['_STAGE_DATA']['enemies']
+        terrain_obj = game_state['_STAGE_DATA']['stage'].terrain
+        self.weapon.update()
 
-        if random.randint(0, self.chance_of_motion) == 1:
-            self.image.move_to_x(self.image.topright[0] + 1,
-                                 game_state['MAIN_DISPLAY_SURF'])
+        current_block_x = terrain_obj.px_to_blocks(self.image.topleft[0])
+        current_block_y = terrain_obj.px_to_blocks(self.image.topleft[1])
+        next_column = list(
+            terrain_obj.terrain2dlist_texts[terrain_obj.template]['text'][:, current_block_x + 1])
+        top_levels = {i if obj == '*' else None for i,
+                      obj in enumerate(next_column)}
+        top_levels.remove(None)
+
+        #underground = terrain.is_underground(self.image.topleft, terrain_obj, self.image.sizey - 3)
+        can_move = True
+
+        # if underground:
+        #     print(self, "is underground!")
+        #     self.image.update_coords((self.image.x, self.image.y - 1))
+
+        if top_levels:
+            # Umm, there is nowhere to go. whoever made this terrain file is
+            # a complte asshole, doing this to these poor characters. :(
+            print(Warning('there is no top level terrain for the character to go'))
+
+        else:
+            # get how far they would have to move.
+
+            distance = terrain_obj.blocks_to_px(
+                min([current_block_y - i for i in top_levels]) + 1)
+
+            print('has to climb %d pixels' % distance)
+            if 0 < distance <= self.jump_height:
+                print('howdy. jumping...')
+                # 10 pixels is the maximum a player can climb, without any sort of tool.
+                self.image.update_coords((self.image.x, self.image.y - 12))
+
+            elif distance > self.jump_height:
+                # can not jump, and can not move. stay still.
+                print('cannot move')
+                can_move = False
+
+        in_air = terrain.is_in_air(self.image.topleft, terrain_obj, 5)
+        if in_air:
+            self.image.update_coords(
+                (self.image.topleft[0], self.image.topleft[1] + 1))
+            print(self, "needs to fall")
+
+        try:
+            motion_target = get_closest_enemy(
+                game_state, self.image.topright[0])
+        except ValueError:
+            # no more enemies remaining, `min` will raise a ValueError.
+            return
+        target_x = motion_target.pos[0]
+
+        x = self.image.topright[0]
+
+        distance = target_x - x if target_x >= x else x - target_x
+
+        if distance <= self.weapon.range:
+            # self.weapon.attack_enemy(motion_target)
+            self.attack(motion_target)
+        print(((self.image.topright[0] - target_x) if self.image.topright[0] > target_x else (target_x - self.image.topright[0])))
+
+        can_move = random.randint(0, self.chance_of_motion) == 1 and can_move
+        # can_move = can_move and ((self.image.topright[0] - target_x) if self.image.topright[0] > target_x else (target_x - self.image.topright[0]))
+        can_move = can_move and distance >= self.weapon.range
+
+        if can_move:
+            print(self, "moving...")
+
+            self.image.move_to_x(self.image.topright[0] + self.max_motion,
+                                 game_state['MAIN_DISPLAY_SURF'],
+                                 pixels=random.randint(1, self.max_motion))
+
+        if game_state['MOUSEDOWN']:
+            if self.image.rect.collidepoint(game_state['MOUSE_POS']):
+                self.image.update_coords(game_state['MOUSE_POS'])
 
         # game_state['MAIN_DISPLAY_SURF'].blit(self.picture, self.image.topright)
 
         update = random.randint(0, self._chance_of_update) == 1
+        if distance <= self.weapon.range:
+            update = False
 
         if not self.image.has_drawn:
             #  needs to draw at least once. override.
             update = True
 
-        self.image.build_image(game_state['MAIN_DISPLAY_SURF'], update)
+        self.image.build_image(
+            game_state['MAIN_DISPLAY_SURF'], BEIGE, rebuild=update)
+
+    def attack(self, target):
+        """attack the target enemy."""
+        if self.weapon.can_attack():
+            self.weapon.attack_enemy(target)
 
 
+def get_closest_enemy(game_state, pos):
+    """get and return the closest enemy to pos."""
+    possible_destinations = [enemy.pos[0]
+                             for enemy in game_state['_STAGE_DATA']['enemies']]
+    print(possible_destinations)
+
+    distances = [pos - i if i <= pos else i -
+                 pos for i in possible_destinations]
+
+    distance = min(distances)
+
+    return game_state['_STAGE_DATA']['enemies'][distances.index(distance)]
 try:
     from _internal import *
     from smr_error import SMRError
@@ -1690,13 +1955,13 @@ class ProgressBar:
     # put it forward once
     """
 
-    def __init__(self, increments_to_full, pos, width, height, alpha=200, direction='backwards', colour=(211, 211, 211)):
+    def __init__(self, increments_to_full, pos, width, height, alpha=200, righttoleft=True, colour=(211, 211, 211)):
         self.increments_to_full = increments_to_full
         self.pos = pos
         self.width = width
         self.height = height
         self.colour = colour
-        self.direction = direction
+        self.righttoleft = righttoleft
         self.full = 0
 
         self.first_surf = pygame.surface.Surface((width, height))
@@ -1715,11 +1980,9 @@ class ProgressBar:
     def __ne__(self, other):
         return self.__dict__ != other.__dict__
 
-    def draw(self, surface, auto_update=True):
+    def draw(self, surface):
         surface.blit(self.first_surf, self.pos)
 
-        if auto_update:
-            pygame.display.update()
 
     def increment(self, surface, increment, auto_update=True):
         """
@@ -1865,24 +2128,23 @@ class Screen:
     def draw(self, game_state):
         """draw enemies on screen."""
         terrain = game_state['_STAGE_DATA']['stage'].terrain
-        game_state['_STAGE_DATA']['enemies'] = []
-        if self.firstrun:
-            for player in game_state['PLAYERS']:
-                player.spawn_on_screen(game_state)
 
+        if self.firstrun:
+            game_state['_STAGE_DATA']['enemies'] = []
             for enemy, x in zip(self.enemies, self.spawn_mode):
-                print(terrain.blocks_to_px(enemy.size), enemy)
                 ground_level = terrain.get_spawn_point(x, terrain.blocks_to_px(enemy.size))
                 enemy.draw((x, ground_level), game_state['MAIN_DISPLAY_SURF'])
                 game_state['_STAGE_DATA']['enemies'].append(enemy)
 
+            for player in game_state['PLAYERS']:
+                player.spawn_on_screen(game_state)
+
             self.firstrun = False
-            print('done spawning.')
 
         else:
             for enemy in self.enemies:
-                enemy.move(game_state["PLAYERS"], game_state["MAIN_DISPLAY_SURF"])
-                enemy.draw(enemy.pos, game_state['MAIN_DISPLAY_SURF'])
+                enemy.move(game_state["PLAYERS"], game_state["MAIN_DISPLAY_SURF"], game_state['_STAGE_DATA']['stage'].terrain)
+                enemy.update(game_state)
             for player in game_state['PLAYERS']:
                 player.update(game_state)
 
@@ -1995,6 +2257,7 @@ class SMRSprite:
 
     def update_coords(self, pos):
         self.topleft = pos
+        self.x, self.y = pos
         self.bottomleft = pos[0], pos[1] + self.sizey
         self.topright = pos[0] + self.sizex, pos[1]
         self.bottomright = pos[0] + self.sizex, pos[1] + self.sizey
@@ -2046,7 +2309,7 @@ if __name__ == '__main__':
     print(SMRSprite.get_topleft_coord(d, s1, s2))
 from threading import Thread
 
-from pygame.locals import QUIT
+from pygame.locals import QUIT, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION, KEYDOWN
 import pygame as pg
 import os
 
@@ -2176,7 +2439,8 @@ class Stage:
             'stage': self,
         }
 
-    def update(self):
+    def update(self, events):
+        """update the stage, and everything related to it."""
         state = self.game_state
 
         terrain_surf = self.terrain.build_surface()
@@ -2187,13 +2451,29 @@ class Stage:
 
         current_screen = self.all_screens[state['_STAGE_DATA']['screen_number']]
 
-    
         display.blit(terrain_surf, (0, 0))
 
         current_screen.draw(state)
 
-        for event in pg.event.get():
+        letters = []
+
+        for event in events:
             check_quit(event)
+
+            if event.type == MOUSEBUTTONDOWN:
+                state['MOUSEDOWN'] = True
+
+            elif event.type == MOUSEMOTION:
+                state['MOUSEDOWN'] = False
+
+            elif event.type == KEYDOWN:
+                letters.append(event.unicode)
+        
+        if letters:
+            pass
+
+        if '~' in letters:
+            print('open terminal...')
 
 
 
@@ -2274,6 +2554,13 @@ except ImportError:
 
 
 VALID_COMMANDS = ('air', 'water', 'size')
+
+
+# there once was a fellow named finn
+# who threw all his legs in a bin
+# he realized, at last
+# he could not move so fast
+# and punched himself right in the chin.
 
 
 class Terrain:
@@ -2491,7 +2778,7 @@ class Terrain:
                     big_actual_picture.blit(
                         sign_picture,
                         # sign is 30x30 pixels
-                        (index2 * self.size - 20, index1 * self.size - 10))
+                        (index2 * self.size - 20, index1 * self.size - 17))
 
         self.built_image = big_actual_picture
         scale(big_actual_picture, (800, 400))
@@ -2512,7 +2799,7 @@ class Terrain:
 
     def get_last_unsolid(self, x):
         """get the index of the bottommost air or water block."""
-        arr = list(self.terrain2dlist_texts[self.template]['text'][:, x])
+        arr = list(self.terrain2dlist_texts[self.template]['text'][:, x - 1])
         arr.reverse()
 
         not_solid = ['+', '-', '~']
@@ -2525,7 +2812,17 @@ class Terrain:
 
     def blocks_to_px(self, blocks):
         """convert the blocks to pixels."""
-        return (self.terrain2dlist_texts[self.template]['size'] * blocks)
+        return round(blocks * self.terrain2dlist_texts[self.template]['size'])
+
+    def is_on_solid(self, x, y, size_of_obj):
+        """ return true if the object is on solid ground. if it is not, return false."""
+        arr = self.terrain2dlist_texts[self.template]['text'][:, x]
+        bottom = y + size_of_obj
+        print(bottom)
+        bottom_blocks = self.px_to_blocks(bottom)
+        print(self.px_to_blocks(x), bottom_blocks)
+
+        return self.get_solid((self.px_to_blocks(x), bottom_blocks))
 
     def get_spawn_point(self, x, size_of_obj):
         """get a proper spawn point on Y axis for object.""" 
@@ -2537,49 +2834,33 @@ class Terrain:
 
     def px_to_blocks(self, pixels):
         """convert blocks to pixels"""
-        return round(self.terrain2dlist_texts[self.template]['size'] / pixels)
+        return round(pixels / self.terrain2dlist_texts[self.template]['size'])
 
 
-# !w/ np- 66.2 seconds
-
-
-def _main(image='dirt', template='flat'):
-    terrain = Terrain(image=image, template=template, use_numpy=1)
-    print(Terrain.terrain2dlist_texts)
-    print(Terrain.terrain2dlist_texts[template])
-    pic = terrain.build_surface()
-
-    import pygame
-    a = pygame.display.set_mode((800, 400))
-    pygame.display.set_caption('terrain viewer')
-    pygame.display.set_icon(PICS['Other']['next'])
-    a.blit(pic, (0, 0))
-    print('\n' * 100)
-    # for i in range(1000):
-    # 	for a in terrain.terrain2dlist_texts['flat']['text']:
-    # 		for i in a:
-    # 			print(i)
-
-    while True:
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                pygame.quit()
-                sys.stdout.close()
-                sys.stderr.close()
-                raise SystemExit
-        pygame.display.update()
-
-
-def proc(args):
-    file = args[1].split('.')[0].split('\\' if os.name == 'nt' else '/')[-1]
-    print(file)
+def is_in_air(pos, terrain, size):
+    """return true if the position is in air. if not, return false."""
+    array = terrain.terrain2dlist_texts[terrain.template]['text']
+    x, y = pos
+    y += size
     try:
-        opt = args[2]
-
+        column = array[:, terrain.px_to_blocks(x)]
     except IndexError:
-        opt = 'stone'
+        return False
+    block = column[terrain.px_to_blocks(y)]
 
-    _main(template=file, image=opt)
+    return terrain.is_air(block)
+
+def is_underground(pos, terrain, size):
+    """return true if any part of the object is underground."""
+    array = terrain.terrain2dlist_texts[terrain.template]['text']
+    x, y = pos
+    y += size
+    print(array, 'howdy ho')
+    column = array[:, terrain.px_to_blocks(x)]
+    block = column[terrain.px_to_blocks(y)]
+    return terrain.is_solid(block)
+
+
 
 
 def _change_colour_surface(surface, r, g, b):
@@ -2595,9 +2876,13 @@ def saveall():
     Terrain('dirt').save_all('binaries')
 
 def main2():
-    t = Terrain('dirt', 'flat')
+    t = Terrain('dirt', 'drop')
     t.load_text()
-    print(t.get_last_unsolid(0))
+    print(t.terrain2dlist_texts[t.template]['text'][:, 1])
+    t.build_surface()
+
+    pg.image.save(t.built_image, "C:\\Users\\Micha\\OneDrive\\Desktop\\hi.png")
+    print(is_in_air((100, 315), t, 5))
 
 if __name__ == '__main__':
     main2()
@@ -2634,13 +2919,12 @@ try:
 except ImportError:
     from ._internal import *
 
-print(PICS)
-
 __all__ = ['Weapon']
 
 
 class Weapon:
-    def __init__(self, klass, colour, level, alphatocolour=None):
+    cooldown = 0
+    def __init__(self, klass, name, colour, level, attack, range, alphatocolour=None):
         self.largeicon = PICS['weapons']['large_icon'][klass][repr(level)][
             colour]
         self.smallicon = PICS['weapons']['small_icon'][klass][repr(level)][
@@ -2649,12 +2933,28 @@ class Weapon:
             change_alpha_to_colour(self.largeicon, alphatocolour)
             change_alpha_to_colour(self.smallicon, alphatocolour)
 
+        self.name = name
+        self.colour = colour
+        self.range = range
+        self.attack = attack
+
         rect = self.largeicon.get_rect()
         pos = rect.bottomright[0] - 4, rect.bottomright[1] - 9
         font = pygame.font.Font('freesansbold.ttf', 8)
         print(font.size('8'))
         surf = font.render(repr(level), True, COLOURS['black'])
         self.largeicon.blit(surf, pos)
+
+    def can_attack(self):
+        """return true if the weapon is able to attack."""
+        return self.cooldown == 0
+
+    def update(self):
+        if self.cooldown != 0: self.cooldown -= 1
+
+    def attack_enemy(self, target):
+        self.cooldown = self.attack.cooldown
+        target.hit(self.attack)
 
 
 if __name__ == '__main__':
@@ -2844,7 +3144,6 @@ def _Box(size, colour, pos, surface, alpha=None, image=None) -> tuple:
 
 
 # pprint(PICS)
-class _MainHandler:
 """
 __init__.py- this is the only module that will 
 be loaded on calling 'import class_', so i thought
@@ -2884,9 +3183,6 @@ except SystemError:
     from enemies import *
     import enemies
     import klass
-
-HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII = 0
-# print(dir())
 import json as _json
 import os
 import enum
@@ -2897,14 +3193,20 @@ _pg.mixer.pre_init(44100, 16, 2, 4096)
 _pg.init()
 
 import save
+import levelparser
 import class_ as _class_
 from class_.sprite import SMRSprite as SpriteUtils
 
-SURFACE = _pg.display.set_mode((800, 600))
 _pg.display.set_caption("Stickman's New World")
+_pg.display.set_icon(_pg.image.load(os.path.join('data', 'game_icon.png')))
+_pg.mouse.set_visible(False)
+SURFACE = _pg.display.set_mode((800, 600))
+ALL_LEVELS = levelparser.get_levels(SURFACE)
 
 _HOME = os.getenv('USERPROFILE') or os.getenv("HOME")
 SAVE_DIR = os.path.join(_HOME, '.stickman_new_world')
+
+
 
 
 class Area(enum.Enum):
@@ -2959,83 +3261,35 @@ ALL = _DECODE.decode(open(os.path.join('config', 'data.json')).read())
 ALL_CLASSES = ['Swordsman', 'Spearman', 'Wizard', 'Archer', 'Angel']
 # print(ALL)
 
+
+
 ALL_TERRAINS = [
     _class_.Terrain('dirt', 'flat'),
 ]
-
-# ALL_LEVELS = {
-#     'village':
-#     _class__.Stage(
-#         position_on_map=(18, 589),
-#         all_screens=[_class_.PeacefulScreen()],
-#         boss_screen=None,
-#         surface=SURFACE,
-#         terrain=ALL_TERRAINS[0],
-#         comes_from=None,
-#         decorations=_class__.BackGroundImage('hut',
-#                                             SpriteUtils.get_topleft_coord(
-#                                                 ALL_TERRAINS[0],
-#                                                 *SpriteUtils.find_closest_of(
-#                                                     ALL_TERRAINS[0], '*'))))
-# }
-
-ALL_LEVELS = {
-    _class_.Stage(
-        "Test Stage",
-        position_on_map=(70, 569),
-        all_screens=[_class_.Screen(
-            # {_class_.Blob(
-            #     COLOURS['blue'],
-            #     _class_.EnemyHead(
-            #         'sad_box',
-            #         'red',
-            #         14,
-            #     ),
-            #     (),
-            #     (),
-            #     _class_.Attack(),
-            #     14
-            # ): 6,
-            # _class_.Blob(
-            #     COLOURS['red'],
-            #     _class_.EnemyHead(
-            #         'normal',
-            #         'green',
-            #         2,
-            #         ),
-            #     (),
-            #     (),
-            #     _class_.Attack(),
-            #     2,
-            #     ): 3,
-        {
-            _class_.Stationary(
-                COLOURS['yellow'],
-                _class_.EnemyHead(
-                    'triangle',
-                    'blue',
-                    4,
-                    ),
-                (),
-                (),
-                _class_.Attack(),
-                4,
-                ): 10,
-            },
-        )],
-        boss_screen=None,
-        surface=SURFACE,
-        terrain=_class_.Terrain('dirt', 'flat'),
-        comes_from=None,
-        # peaceful=True,
-    ),
-}
 
 ALL_SCREENS = []
 
 ALL_WEAPONS = []
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# "remember to add a 'Spicy Shot' magic book later." (Alvin Gu, Oct 26, 2018) #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+DEFAULT_WEAPONS = {
+    'angel': _class_.Weapon('knife', 'Knife', 'black', 1, _class_.Attack(4, 20), 3),
+    'swordsman': _class_.Weapon('sword', 'Sword', 'gray', 1, _class_.Attack(7, 60), 7),
+    'spearman': _class_.Weapon('spear', 'Spear', 'gray', 1, _class_.Attack(5, 50), 12),
+    'archer': _class_.Weapon('bow', 'Bow', 'brown', 1, _class_.Attack(3, 30), 130),
+    'wizard': _class_.Weapon('wand', "Beginner's Spellbook", 'blue', 1, _class_.Attack(15, 120), 70),
+
+}
+
 ALL_COMPOS = []
+
+
+import picture_collect
+
+PICS = picture_collect.gather_pics('data')
 
 if os.path.exists(SAVE_DIR):
     _SAVE = save.read_file()
@@ -3048,24 +3302,23 @@ if os.path.exists(SAVE_DIR):
 
     MAIN_GAME_STATE = {
         'AREA': 0,
+        'TERMINAL': None,
         'SETTINGS': SETTINGS,
         'GAME_DATA': _SAVE,
         'INVENTORY': _INV,
         'MAIN_DISPLAY_SURF': SURFACE,
+        'CURSOR': PICS['cursor'],
     }
 else:
     MAIN_GAME_STATE = {
         'AREA': 0,
+        'TERMINAL': None,
         'SETTINGS': SETTINGS,
         'GAME_DATA': {},
         'INVENTORY': {},
         'MAIN_DISPLAY_SURF': SURFACE,
+        'CURSOR': PICS['cursor'],
     }
-
-
-import picture_collect
-
-PICS = picture_collect.gather_pics('data')
 """
 encrypt.py- encrypter for stickmanranger save files.
 I want people to be able to mad this game, but i dont 
@@ -3179,21 +3432,32 @@ from database import MAIN_GAME_STATE, PICS, ALL_LEVELS, Area
 
 SURFACE = MAIN_GAME_STATE['MAIN_DISPLAY_SURF']
 
+PLAY_AREA = pg.Rect((800, 400), (0, 0))
+MENU_AREA = pg.Rect((800, 200), (0, 400))
+
 CLOCK = pg.time.Clock()
-FPS = 30
+FPS = 60
 
 def main():
     """run the game, after the title screen."""
     continue_ = True
+    menu = pg.Surface((800, 200))
+    menu.fill((0, 255, 0))
+    MAIN_GAME_STATE['MOUSEDOWN'] = False
 
     while continue_:
+        MAIN_GAME_STATE['MOUSE_POS'] = pg.mouse.get_pos()
+        events = [event for event in pg.event.get()]
         if MAIN_GAME_STATE['AREA'] == Area.MAP:
             draw_map()
             handle_map()
 
         elif MAIN_GAME_STATE['AREA'] == Area.STAGE:
-            MAIN_GAME_STATE['STAGE'].update()
+            MAIN_GAME_STATE['STAGE'].update(events)
         
+        
+        MAIN_GAME_STATE['MAIN_DISPLAY_SURF'].blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
+        # MAIN_GAME_STATE['MAIN_DISPLAY_SURF'].blit(menu, (0, 400))
         pg.display.update()
 
         CLOCK.tick(FPS)
@@ -3245,7 +3509,56 @@ t = threading.Thread(target=p)
 t.start()
 while True:
     Q.put(input('type to send a message to t: '))
-#!/usr/bin/python3
+"""levelparser: converts a JSON level into a Stage object."""
+
+import json
+
+import pygame
+
+import class_
+
+def get_levels(mainsurf):
+	"""parse and return all levels in levels.json."""
+	levels = json.load(open("levels.json"))
+	print(levels.keys(), levels.values())
+	stages = []
+
+	for name, items in zip(levels, levels.values()):
+		screens = []
+		for obj in items['screens']:
+			enemies = {}
+			for enemy in obj['enemies']:
+				enemy_obj = getattr(class_, enemy['type'])(
+							enemy['colour'],
+							class_.EnemyHead(*enemy['head']),
+							enemy['drops'],
+							enemy['droprates'],
+							class_.Attack(*enemy['attack']),
+							enemy['health'],
+							enemy['range'],
+							enemy['size'],
+						)
+				enemies[enemy_obj] = enemy['amount']
+
+					
+			screens.append(class_.Screen(enemies))
+
+		print(json.dumps(items, indent=4))
+		stage = class_.Stage(
+			name,
+			position_on_map=tuple(items['position']),
+			all_screens=screens,
+			boss_screen=items['boss_screen'],
+			surface=mainsurf,
+			terrain=class_.Terrain(
+				items['terrain']['texture'], items['terrain']['template']),
+			comes_from=items['comes_from'],
+		)
+		stages.append(stage)
+
+	return stages
+# hi
+get_levels(pygame.Surface((1, 1)))#!/usr/bin/python3
 # main.py
 """
 the main code for the game stickman ranger, a game similar to stick ranger(www.dan-ball.jp/en/javagame/ranger)
@@ -3633,6 +3946,7 @@ if __name__ == '__main__':
 else:
     print('why on earth are you importing this?\n\
         it is supposed to a main module!')
+"""menu.py- handle the menu at the bottom of the screen."""
 """
 bugreport.py
 this module takes any exception, the app name,
@@ -4283,18 +4597,20 @@ for starting the game.
 """
 
 from argparse import Namespace
-import enum
+import copy
 import os
 
+# pylint: disable=no-name-in-module
 
 from pygame.locals import QUIT, MOUSEBUTTONDOWN, MOUSEMOTION
 import pygame as pg
 
 from class_.character_image import CharacterImage
+import class_
 from database import COLOURS, MAIN_GAME_STATE
 import database
 import gameplay
-import class_
+
 
 # window sizes
 WIN_X, WIN_Y = 800, 600
@@ -4310,6 +4626,11 @@ BLACK = COLOURS['black']
 FPS = 60
 
 PICS = database.PICS
+
+# (:()-|--<
+# parts created on computer, assembled in canada.
+# NO BATTERIES REQUIRED
+# (except in the computer, maybe)
 
 
 def _border(surf, colour):
@@ -4328,12 +4649,6 @@ def _border(surf, colour):
              (rect.topright[0] - 1, rect.topright[1])]
 
     pg.draw.lines(surf, colour, True, lines)
-
-s = pg.Surface((100, 100))
-d = pg.Surface((10, 10))
-d.fill(BLACK)
-_border(d, WHITE)
-# pg.image.save(d, r'C:\Users\Michael\Desktop\test_images\howdy.png')
 
 
 class Box:
@@ -4496,6 +4811,8 @@ def main():
     continue_ = True
 
     while continue_:
+        SURFACE.blit(PICS['title_screen'], (0, 0))
+        SURFACE.blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
         for event in pg.event.get():
             check_quit(event)
 
@@ -4528,6 +4845,7 @@ def main():
                     func = lbl.function
                     continue_ = False
 
+        SURFACE.blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
         pg.display.update()
         CLOCK.tick(FPS)
 
@@ -4750,7 +5068,7 @@ def new_game():
             box.draw(SURFACE)
 
         for i in char_imgs:
-            i.build_image(SURFACE)
+            i.build_image(SURFACE, COLOURS['beige'], False)
 
         for i in char_lbls:
             i.draw(SURFACE)
@@ -4785,24 +5103,19 @@ def new_game():
 
             character.update_coords(coords)
 
-            character.build_image(SURFACE)
+            character.build_image(SURFACE, COLOURS['beige'], False)
 
             # pg.display.update()
         # print((str(num_selected) + "\n") * 10)
 
+        SURFACE.blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
         pg.display.update()
         CLOCK.tick(24)
 
     continue_ = True
     MAIN_GAME_STATE["AREA"] = database.Area.MAP
     MAIN_GAME_STATE["PLAYERS"] = get_characters_from_images([i[0] for i in chosen])
-    print(MAIN_GAME_STATE["PLAYERS"])
 
-
-    # while continue_:
-    #     gameplay.draw_map()
-    #     gameplay.handle_map()
-    #     pg.display.update()
 
     gameplay.main()
 
@@ -4818,14 +5131,15 @@ def get_characters_from_images(images):
     namestotypes = {
         'swordsman': class_.Swordsman,
         'angel': class_.Angel,
-        
         'archer': class_.Archer,
         'spearman': class_.Spearman,
         'wizard': class_.Wizard,
     }
+
     num = 1
+
     for name in names:
-        characters.append(namestotypes[name](num, MAIN_GAME_STATE))
+        characters.append(namestotypes[name](num, MAIN_GAME_STATE, copy.copy(database.DEFAULT_WEAPONS[name])))
         num += 1
 
     return characters

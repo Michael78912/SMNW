@@ -6,6 +6,7 @@ status effects, etc...
 from pygame.locals import QUIT, MOUSEBUTTONDOWN
 import pygame as pg
 
+import terminal
 from database import MAIN_GAME_STATE, PICS, ALL_LEVELS, Area
 
 SURFACE = MAIN_GAME_STATE['MAIN_DISPLAY_SURF']
@@ -26,6 +27,8 @@ def main():
     while continue_:
         MAIN_GAME_STATE['MOUSE_POS'] = pg.mouse.get_pos()
         events = [event for event in pg.event.get()]
+        for e in events:
+            terminal.handle(e)
         if MAIN_GAME_STATE['AREA'] == Area.MAP:
             draw_map()
             handle_map()
@@ -33,6 +36,10 @@ def main():
         elif MAIN_GAME_STATE['AREA'] == Area.STAGE:
             MAIN_GAME_STATE['STAGE'].update(events)
         
+        if MAIN_GAME_STATE.get('TERMINAL'):
+            for e in events:
+                MAIN_GAME_STATE['TERMINAL'].add_event(e)
+            MAIN_GAME_STATE['TERMINAL'].threaded_update()
         MAIN_GAME_STATE['MAIN_DISPLAY_SURF'].blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
         # MAIN_GAME_STATE['MAIN_DISPLAY_SURF'].blit(menu, (0, 400))
         pg.display.update()
@@ -47,13 +54,13 @@ def draw_map():
 
 def handle_map():
     pos = pg.mouse.get_pos()
-    print(pos)
 
     for stage in ALL_LEVELS:
         stage.check_hover(pos)
 
         for event in pg.event.get():
             check_quit(event)
+            terminal.handle(event)
 
             if event.type == MOUSEBUTTONDOWN and stage.rect.collidepoint(*event.pos):
                 stage.init(MAIN_GAME_STATE)

@@ -29,6 +29,13 @@ except ImportError:
 VALID_COMMANDS = ('air', 'water', 'size')
 
 
+# there once was a fellow named finn
+# who threw all his legs in a bin
+# he realized, at last
+# he could not move so fast
+# and punched himself right in the chin.
+
+
 class Terrain:
     top_water = PICS['Other']['top_water']
 
@@ -244,7 +251,7 @@ class Terrain:
                     big_actual_picture.blit(
                         sign_picture,
                         # sign is 30x30 pixels
-                        (index2 * self.size - 20, index1 * self.size - 10))
+                        (index2 * self.size - 20, index1 * self.size - 17))
 
         self.built_image = big_actual_picture
         scale(big_actual_picture, (800, 400))
@@ -308,11 +315,24 @@ def is_in_air(pos, terrain, size):
     array = terrain.terrain2dlist_texts[terrain.template]['text']
     x, y = pos
     y += size
-    column = array[:, terrain.px_to_blocks(x)]
+    try:
+        column = array[:, terrain.px_to_blocks(x)]
+    except IndexError:
+        return False
     block = column[terrain.px_to_blocks(y)]
-    print(block)
 
     return terrain.is_air(block)
+
+def is_underground(pos, terrain, size):
+    """return true if any part of the object is underground."""
+    array = terrain.terrain2dlist_texts[terrain.template]['text']
+    x, y = pos
+    y += size
+    print(array, 'howdy ho')
+    column = array[:, terrain.px_to_blocks(x)]
+    block = column[terrain.px_to_blocks(y)]
+    return terrain.is_solid(block)
+
 
 
 
@@ -329,9 +349,12 @@ def saveall():
     Terrain('dirt').save_all('binaries')
 
 def main2():
-    t = Terrain('dirt', 'flat')
+    t = Terrain('dirt', 'drop')
     t.load_text()
     print(t.terrain2dlist_texts[t.template]['text'][:, 1])
+    t.build_surface()
+
+    pg.image.save(t.built_image, "C:\\Users\\Micha\\OneDrive\\Desktop\\hi.png")
     print(is_in_air((100, 315), t, 5))
 
 if __name__ == '__main__':

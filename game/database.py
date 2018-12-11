@@ -8,6 +8,7 @@ _pg.mixer.pre_init(44100, 16, 2, 4096)
 _pg.init()
 
 import save
+import levelparser
 import class_ as _class_
 from class_.sprite import SMRSprite as SpriteUtils
 
@@ -15,9 +16,12 @@ _pg.display.set_caption("Stickman's New World")
 _pg.display.set_icon(_pg.image.load(os.path.join('data', 'game_icon.png')))
 _pg.mouse.set_visible(False)
 SURFACE = _pg.display.set_mode((800, 600))
+ALL_LEVELS = levelparser.get_levels(SURFACE)
 
 _HOME = os.getenv('USERPROFILE') or os.getenv("HOME")
 SAVE_DIR = os.path.join(_HOME, '.stickman_new_world')
+
+
 
 
 class Area(enum.Enum):
@@ -72,82 +76,11 @@ ALL = _DECODE.decode(open(os.path.join('config', 'data.json')).read())
 ALL_CLASSES = ['Swordsman', 'Spearman', 'Wizard', 'Archer', 'Angel']
 # print(ALL)
 
+
+
 ALL_TERRAINS = [
     _class_.Terrain('dirt', 'flat'),
 ]
-
-# ALL_LEVELS = {
-#     'village':
-#     _class__.Stage(
-#         position_on_map=(18, 589),
-#         all_screens=[_class_.PeacefulScreen()],
-#         boss_screen=None,
-#         surface=SURFACE,
-#         terrain=ALL_TERRAINS[0],
-#         comes_from=None,
-#         decorations=_class__.BackGroundImage('hut',
-#                                             SpriteUtils.get_topleft_coord(
-#                                                 ALL_TERRAINS[0],
-#                                                 *SpriteUtils.find_closest_of(
-#                                                     ALL_TERRAINS[0], '*'))))
-# }
-
-ALL_LEVELS = {
-    _class_.Stage(
-        "Test Stage",
-        position_on_map=(70, 569),
-        all_screens=[_class_.Screen(
-            {_class_.Blob(
-                COLOURS['blue'],
-                _class_.EnemyHead(
-                    'sad_box',
-                    'yellow',
-                    14,
-                ),
-                (),
-                (),
-                _class_.Attack(1, 100),
-                30,
-                5,
-                14,
-            ): 6,
-                _class_.Blob(
-                COLOURS['red'],
-                _class_.EnemyHead(
-                    'normal',
-                    'green',
-                    2,
-                ),
-                (),
-                (),
-                _class_.Attack(1, 100),
-                30,
-                5,
-                2,
-            ): 3,
-                _class_.Stationary(
-                COLOURS['yellow'],
-                _class_.EnemyHead(
-                    'triangle',
-                    'blue',
-                    4,
-                ),
-                (),
-                (),
-                _class_.Attack(1, 100),
-                30,
-                5,
-                4,
-            ): 10,
-            },
-        )],
-        boss_screen=None,
-        surface=SURFACE,
-        terrain=_class_.Terrain('dirt', 'flat'),
-        comes_from=None,
-        # peaceful=True,
-    ),
-}
 
 ALL_SCREENS = []
 
@@ -178,12 +111,14 @@ if os.path.exists(SAVE_DIR):
     print(_SAVE)
     _INV_RAW = _SAVE['inventory']
     x, y = max([int(i.split('x')[0]) for i in _INV_RAW]), max(
-        [int(i.split('x')[1]) for i in _INV_RAW])
+        ([int(i.split('x')[1]) for i in _INV_RAW]))
     _INV = _class_.InventoryHandler(x, y)
     _INV.sort_dict(_INV_RAW)
 
     MAIN_GAME_STATE = {
         'AREA': 0,
+        'FRAMELY_FUNCTIONS': [],
+        'TERMINAL': None,
         'SETTINGS': SETTINGS,
         'GAME_DATA': _SAVE,
         'INVENTORY': _INV,
@@ -193,6 +128,8 @@ if os.path.exists(SAVE_DIR):
 else:
     MAIN_GAME_STATE = {
         'AREA': 0,
+        'FRAMELY_FUNCTIONS': [],
+        'TERMINAL': None,
         'SETTINGS': SETTINGS,
         'GAME_DATA': {},
         'INVENTORY': {},

@@ -6,25 +6,9 @@
     ],
     "screens": [
       {
-        "Enemies": [
-          {
-            "type": "Blob",
-            "colour": "blue",
-            "head": [
-              "sad_box",
-              "yellow",
-              14
-            ],
-            "drops": [],
-            "droprates": [],
-            "attack": [
-              1,
-              100
-            ],
-            "health": 30,
-            "range": 5,
-            "size": 14
-          },
+        "enemies": [
+         
+
           {
             "type": "Blob",
             "colour": "red",
@@ -41,7 +25,27 @@
             ],
             "health": 30,
             "range": 5,
-            "size": 2
+            "size": 2,
+            "amount": 12
+          },
+          {
+            "type": "Blob",
+            "colour": "red",
+            "head": [
+              "sad_box",
+              "red",
+              7
+            ],
+            "drops": [],
+            "droprates": [],
+            "attack": [
+              1,
+              100
+            ],
+            "health": 20,
+            "range": 5,
+            "size": 7,
+            "amount": 3
           },
           {
             "type": "Stationary",
@@ -59,16 +63,17 @@
             ],
             "health": 30,
             "range": 5,
-            "size": 4
+            "size": 4,
+            "amount": 10
           }
-        ],
-        "bossscreen": null,
-        "terrain": {
-          "texture": "dirt",
-          "template": "flat"
-        },
-        "comes_from": null
+        ]
       }
-    ]
+    ],
+    "boss_screen": null,
+      "terrain": {
+        "texture": "sand",
+        "template": "test"
+      },
+      "comes_from": null
   }
 }

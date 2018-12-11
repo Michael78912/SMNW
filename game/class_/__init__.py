@@ -37,6 +37,3 @@ except SystemError:
     from enemies import *
     import enemies
     import klass
-
-HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII = 0
-# print(dir())

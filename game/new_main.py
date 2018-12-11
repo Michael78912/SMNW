@@ -3,19 +3,23 @@ for starting the game.
 """
 
 from argparse import Namespace
-import enum
 import copy
+import logging
 import os
 
+# pylint: disable=no-name-in-module
 
 from pygame.locals import QUIT, MOUSEBUTTONDOWN, MOUSEMOTION
 import pygame as pg
 
+import logs
 from class_.character_image import CharacterImage
-from database import COLOURS, MAIN_GAME_STATE
+import class_
+from database import COLOURS, MAIN_GAME_STATE, Area
 import database
 import gameplay
-import class_
+import terminal
+
 
 # window sizes
 WIN_X, WIN_Y = 800, 600
@@ -31,6 +35,11 @@ BLACK = COLOURS['black']
 FPS = 60
 
 PICS = database.PICS
+
+# (:()-|--<
+# parts created on computer, assembled in canada.
+# NO BATTERIES REQUIRED
+# (except in the computer, maybe)
 
 
 def _border(surf, colour):
@@ -49,12 +58,6 @@ def _border(surf, colour):
              (rect.topright[0] - 1, rect.topright[1])]
 
     pg.draw.lines(surf, colour, True, lines)
-
-s = pg.Surface((100, 100))
-d = pg.Surface((10, 10))
-d.fill(BLACK)
-_border(d, WHITE)
-# pg.image.save(d, r'C:\Users\Michael\Desktop\test_images\howdy.png')
 
 
 class Box:
@@ -215,8 +218,11 @@ def main():
     # place starting image on screen
     SURFACE.blit(PICS['title_screen'], (0, 0))
     continue_ = True
+    logging.debug('starting game')
 
     while continue_:
+        if MAIN_GAME_STATE.get('TERMINAL') is not None:
+            MAIN_GAME_STATE['TERMINAL'].threaded_update()
         SURFACE.blit(PICS['title_screen'], (0, 0))
         SURFACE.blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
         for event in pg.event.get():
@@ -238,11 +244,21 @@ def main():
 
     while continue_:
         SURFACE.blit(PICS['menu_background'], (0, 0))
+        
+        if MAIN_GAME_STATE.get('TERMINAL') is not None:
+            MAIN_GAME_STATE['TERMINAL'].threaded_update()
+
+        if MAIN_GAME_STATE['AREA'] == Area.MAP:
+            gameplay.main()
+            continue_ = False
+
         label("Stickman's New World", CENTRE_X, 100, size=60)
+
         for lbl in rects:
             lbl.draw(SURFACE)
         for event in pg.event.get():
             check_quit(event)
+            terminal.handle(event)
 
             for lbl in rects:
                 lbl.handle(event, SURFACE)
@@ -250,6 +266,9 @@ def main():
                 if event.type == MOUSEBUTTONDOWN and lbl.rect.collidepoint(*event.pos):
                     func = lbl.function
                     continue_ = False
+
+        if MAIN_GAME_STATE.get('TERMINAL') is not None:
+            MAIN_GAME_STATE['TERMINAL'].threaded_update()
 
         SURFACE.blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
         pg.display.update()
@@ -463,8 +482,10 @@ def new_game():
     filled = False
 
     while continue_:
-
         SURFACE.blit(PICS['menu_background'], (0, 0))
+        if MAIN_GAME_STATE['AREA'] != Area.TITLE:
+            gameplay.main()
+            continue_ = False
         if None not in chosen:
             next_button.draw(SURFACE)
             filled = True
@@ -478,11 +499,10 @@ def new_game():
 
         for i in char_lbls:
             i.draw(SURFACE)
-            # if i.underlined:
-            # add_chosen(char_lbls, i, char_imgs[char_lbls.index(i)])
 
         for event in pg.event.get():
             check_quit(event)
+            terminal.handle(event)
 
             for lbl in char_lbls:
                 lbl.handle(event, SURFACE)
@@ -514,6 +534,9 @@ def new_game():
             # pg.display.update()
         # print((str(num_selected) + "\n") * 10)
 
+        if MAIN_GAME_STATE.get('TERMINAL') is not None:
+            MAIN_GAME_STATE['TERMINAL'].threaded_update()
+        
         SURFACE.blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
         pg.display.update()
         CLOCK.tick(24)
@@ -564,4 +587,11 @@ RECT_FUNCS = {
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception:
+        logging.exception("Exception Encountered")
+        logging.debug('exiting game.')
+        raise
+    except SystemExit:
+        logging.debug('exiting game.')

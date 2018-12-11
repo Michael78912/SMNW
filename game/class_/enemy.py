@@ -9,6 +9,7 @@ from .damagenumbers import DamageNumber
 class Enemy:
     """base class for stickmanranger enemies"""
     id = 0
+    health = 0
     damage_font = pg.font.Font(os.path.join('data', 'Roboto-Regular.ttf'), 9)
     damage_numbers = []
     dead = False

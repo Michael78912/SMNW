@@ -1,10 +1,15 @@
-import pygame as pg
+"""enemies.py- contains enemies that are used in SMNW.
+may create a seperate library for these one day, but until I 
+decide to use something other than Blob and Stationary, I'll be fine.
+"""
 
-try:
-    from enemy import Enemy
-except ImportError:
-    from .enemy import Enemy
+
 import random
+
+
+from .enemy import Enemy
+from . import terrain
+
 
 __all__ = ['Blob', 'Stationary']
 
@@ -24,11 +29,13 @@ class Blob(Enemy):
     body = None
     chance_of_motion = 3
     _damaging = -1
+    fell_on_last = 0
     on_screen = False
     intelligence = 4
 
     def __init__(self, colour, head, drops, drop_rates, attack, health, range, size):
         super().__init__()
+
         self.colour = colour
         self.health = health
         self.range = range
@@ -52,8 +59,6 @@ class Blob(Enemy):
     #     rect.center = self.pos[0] + self.size_px // 2, self.pos[1] - 10
     #     pg.display.get_surface().blit(dmg, rect)
 
-
-
     def __repr__(self):
         return "Blob enemy type " + str(self._num)
 
@@ -65,12 +70,43 @@ class Blob(Enemy):
         surface.blit(self.head.get_image(colour), coordinates)
         self.pos = coordinates
 
-    def move(self, all_players, surface):
+    def move(self, all_players, surface, terrain_obj):
+        # pylint: disable=too-many-locals
         """moves the enemy towards the closest player to it.
-        the Blob does not move too much, and has a 1/4 (intelligence) 
+        the Blob does not move too much, and has a 1/4 (intelligence)
         chance of moving the way away from the players.
         """
         if random.randint(1, self.chance_of_motion) == 1:
+            # innocent until proven guilty. (of being in a pit)
+            can_move = True
+
+            in_air = terrain.is_in_air(self.pos, terrain_obj, self.size_px)
+
+            current_block_x = terrain_obj.px_to_blocks(self.pos[0])
+            current_block_y = terrain_obj.px_to_blocks(self.pos[1])
+
+            right_column = list(terrain_obj.terrain2dlist_texts[terrain_obj.template]
+                               ['text'][:, current_block_x - 1])
+            
+            left_column = list(terrain_obj.terrain2dlist_texts[terrain_obj.template]
+                                ['text'[:, current_block_x + 1]])
+
+            top_levels = {i if obj == '*' else None for i,
+                          obj in enumerate(right_column)}
+            top_levels.remove(None)
+
+            if in_air:
+                # fall two pixels, because enemy is in air
+                self.fell_on_last = 1
+                self.pos = self.pos[0], self.pos[1] + 2
+
+            elif self.fell_on_last == 1:
+                self.fell_on_last = 0
+                # for some strange reason that is completely beyond me,
+                # all enemies seem to stay 4 pixels above ground after falling.
+                # this fixes that.
+                self.pos = self.pos[0], self.pos[1] + 4
+
             current_x = self.pos[0]
 
             possible_destinations = [player.image.topright[0]
@@ -87,22 +123,31 @@ class Blob(Enemy):
 
             move_proper = random.randint(1, self.intelligence) == 1
 
+
+
             if dest >= current_x:
                 # greater. want to move to the right.
                 if move_proper:
+                    move_right = False
                     self.pos = (self.pos[0] - 1, self.pos[1])
                 else:
+                    move_right = True
                     self.pos = (self.pos[0] + 1, self.pos[1])
 
             else:
                 # smaller. want to move to left.
                 if move_proper:
+                    move_right = False
                     self.pos = (self.pos[0] + 1, self.pos[1])
                 else:
+                    move_right = True
                     self.pos = (self.pos[0] - 1, self.pos[1])
+
+            # check to see if the enemy can't move.
+
+
 
 
 class Stationary(Blob):
     """similar to blob, but does n ot move."""
     def move(*_): pass
-

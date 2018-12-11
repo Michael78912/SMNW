@@ -64,7 +64,6 @@ class Screen:
         if self.firstrun:
             game_state['_STAGE_DATA']['enemies'] = []
             for enemy, x in zip(self.enemies, self.spawn_mode):
-                print(terrain.blocks_to_px(enemy.size), enemy)
                 ground_level = terrain.get_spawn_point(x, terrain.blocks_to_px(enemy.size))
                 enemy.draw((x, ground_level), game_state['MAIN_DISPLAY_SURF'])
                 game_state['_STAGE_DATA']['enemies'].append(enemy)
@@ -73,13 +72,11 @@ class Screen:
                 player.spawn_on_screen(game_state)
 
             self.firstrun = False
-            print('done spawning.')
 
         else:
             for enemy in self.enemies:
-                enemy.move(game_state["PLAYERS"], game_state["MAIN_DISPLAY_SURF"])
+                enemy.move(game_state["PLAYERS"], game_state["MAIN_DISPLAY_SURF"], game_state['_STAGE_DATA']['stage'].terrain)
                 enemy.update(game_state)
-                print([e.id for e in game_state['_STAGE_DATA']['enemies']])
             for player in game_state['PLAYERS']:
                 player.update(game_state)
 

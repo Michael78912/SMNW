@@ -1,6 +1,6 @@
 from threading import Thread
 
-from pygame.locals import QUIT, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION
+from pygame.locals import QUIT, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION, KEYDOWN
 import pygame as pg
 import os
 
@@ -131,6 +131,7 @@ class Stage:
         }
 
     def update(self, events):
+        """update the stage, and everything related to it."""
         state = self.game_state
 
         terrain_surf = self.terrain.build_surface()
@@ -141,10 +142,11 @@ class Stage:
 
         current_screen = self.all_screens[state['_STAGE_DATA']['screen_number']]
 
-    
         display.blit(terrain_surf, (0, 0))
 
         current_screen.draw(state)
+
+        letters = []
 
         for event in events:
             check_quit(event)
@@ -154,6 +156,15 @@ class Stage:
 
             elif event.type == MOUSEMOTION:
                 state['MOUSEDOWN'] = False
+
+            elif event.type == KEYDOWN:
+                letters.append(event.unicode)
+        
+        if letters:
+            pass
+
+        if '~' in letters:
+            print('open terminal...')
 
 
 
