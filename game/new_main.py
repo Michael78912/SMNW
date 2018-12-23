@@ -345,6 +345,8 @@ def _make_coloured(box):
 
 def new_game():
 
+    MAIN_GAME_STATE['AREA'] = Area.TITLE
+
     char_imgs = [
         CharacterImage('swordsman',
                        # fake weapon. only has colour attribute
@@ -483,9 +485,6 @@ def new_game():
 
     while continue_:
         SURFACE.blit(PICS['menu_background'], (0, 0))
-        if MAIN_GAME_STATE['AREA'] != Area.TITLE:
-            gameplay.main()
-            continue_ = False
         if None not in chosen:
             next_button.draw(SURFACE)
             filled = True
@@ -537,6 +536,10 @@ def new_game():
         if MAIN_GAME_STATE.get('TERMINAL') is not None:
             MAIN_GAME_STATE['TERMINAL'].threaded_update()
         
+        if MAIN_GAME_STATE['AREA'] != Area.TITLE:
+            continue_ = False
+            gameplay.main()
+        
         SURFACE.blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
         pg.display.update()
         CLOCK.tick(24)
@@ -544,7 +547,6 @@ def new_game():
     continue_ = True
     MAIN_GAME_STATE["AREA"] = database.Area.MAP
     MAIN_GAME_STATE["PLAYERS"] = get_characters_from_images([i[0] for i in chosen])
-
 
     gameplay.main()
 
@@ -579,11 +581,11 @@ class FakeWeapon:
         self.colour = colour
 
 
-RECT_FUNCS = {
-    0: lambda: None,
-    1: new_game,
-    2: lambda: None,
-}
+RECT_FUNCS = [
+    lambda: None,
+    new_game,
+    lambda: None,
+]
 
 
 if __name__ == '__main__':

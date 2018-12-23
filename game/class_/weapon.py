@@ -41,9 +41,9 @@ class Weapon:
     def update(self):
         if self.cooldown != 0: self.cooldown -= 1
 
-    def attack_enemy(self, target):
+    def attack_enemy(self, origin, target, game_state):
         self.cooldown = self.attack.cooldown
-        target.hit(self.attack)
+        self.attack.attack(origin, target, game_state)
 
 
 if __name__ == '__main__':

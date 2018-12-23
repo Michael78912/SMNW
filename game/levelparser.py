@@ -9,7 +9,6 @@ import class_
 def get_levels(mainsurf):
 	"""parse and return all levels in levels.json."""
 	levels = json.load(open("levels.json"))
-	print(levels.keys(), levels.values())
 	stages = []
 
 	for name, items in zip(levels, levels.values()):
@@ -22,7 +21,7 @@ def get_levels(mainsurf):
 							class_.EnemyHead(*enemy['head']),
 							enemy['drops'],
 							enemy['droprates'],
-							class_.Attack(*enemy['attack']),
+							class_.MeleeAttack(*enemy['attack']),
 							enemy['health'],
 							enemy['range'],
 							enemy['size'],
@@ -32,7 +31,6 @@ def get_levels(mainsurf):
 					
 			screens.append(class_.Screen(enemies))
 
-		print(json.dumps(items, indent=4))
 		stage = class_.Stage(
 			name,
 			position_on_map=tuple(items['position']),
@@ -47,4 +45,3 @@ def get_levels(mainsurf):
 
 	return stages
 # hi
-get_levels(pygame.Surface((1, 1)))

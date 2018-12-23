@@ -37,6 +37,7 @@ VALID_COMMANDS = ('air', 'water', 'size')
 
 
 class Terrain:
+    built_image = None
     top_water = PICS['Other']['top_water']
 
     surface_symbol = '*'
@@ -67,6 +68,10 @@ class Terrain:
 
         except AttributeError:
             self.load_text()
+    
+    def get_array(self):
+        """find and return the proper array of terrain for the current object"""
+        return self.terrain2dlist_texts[self.template]['text']
 
     def __iter__(self):
         for i in self.terrain2dlist:

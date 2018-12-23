@@ -110,11 +110,7 @@ class Class:
 
         can_move = True
 
-        if not top_levels:
-            # Umm, there is nowhere to go. whoever made this terrain file is somewhat rude.
-            logging.warn('no top level terrain for character to go to')
-
-        else:
+        if top_levels:
             # get how far they would have to move.
 
             distance = terrain_obj.blocks_to_px(
@@ -150,7 +146,7 @@ class Class:
 
         if distance <= self.weapon.range:
             # self.weapon.attack_enemy(motion_target)
-            self.attack(motion_target)
+            self.attack(motion_target, game_state)
         print(((self.image.topright[0] - target_x) if self.image.topright[0] > target_x else (target_x - self.image.topright[0])))
 
         can_move = random.randint(0, self.chance_of_motion) == 1 and can_move
@@ -181,10 +177,10 @@ class Class:
         self.image.build_image(
             game_state['MAIN_DISPLAY_SURF'], BEIGE, rebuild=update)
 
-    def attack(self, target):
+    def attack(self, target, game_state):
         """attack the target enemy."""
         if self.weapon.can_attack():
-            self.weapon.attack_enemy(target)
+            self.weapon.attack_enemy(self.image.topright, target, game_state)
 
 
 def get_closest_enemy(game_state, pos):

@@ -1,8 +1,10 @@
 import os.path
+import random
 
 import pygame as pg
 
 from .smr_error import SMRError
+from .particle import Particle
 from .damagenumbers import DamageNumber
 
 
@@ -40,15 +42,14 @@ class Enemy:
             self.size,
         )
 
-        
     def update(self, game_state):
         self.damage_numbers = [x for x in self.damage_numbers if not x.dead]
-        #print(self.damage_numbers)
+        # print(self.damage_numbers)
         if not self.dead:
 
             for i in self.damage_numbers:
                 i.update(game_state['MAIN_DISPLAY_SURF'])
-            
+
             colour = None
 
             if self.in_damage_state:
@@ -60,11 +61,18 @@ class Enemy:
             self.draw(self.pos, game_state['MAIN_DISPLAY_SURF'], colour)
 
             if self.health <= 0:
-                i = get_enemy_by_id(game_state['_STAGE_DATA']['enemies'], self.id)
-                print('lol. enemy with id %s is now IN THE VOID.' % self.id)
+                i = get_enemy_by_id(
+                    game_state['_STAGE_DATA']['enemies'], self.id)
+
                 del game_state['_STAGE_DATA']['enemies'][i]
+
                 self.dead = True
 
+                particle_amount = self.size_px
+
+                game_state['PARTICLES'] += make_particles_in(pg.Rect(
+                    self.pos[0], self.pos[1], self.size_px, self.size_px), particle_amount,
+                    self.head.head.get_at((5, 5)))
 
     def draw(*_):
         """to be overridden"""
@@ -78,11 +86,21 @@ class Enemy:
         return "{} enemy colour {} size {}".format(self.__class__.__name__, self.colour, self.size)
 
 
+def make_particles_in(rect, num, colour):
+    """make num many particles, within rect.
+    """
+    return [Particle(colour, Particle.default_path((x, y)), random.randint(70, 120))
+            for x, y in zip(
+            [random.randint(rect.left, rect.right) for _ in range(num)],
+            [random.randint(rect.top, rect.bottom) for _ in range(num)],
+            )
+            ]
+
+
 def get_enemy_by_id(enemies, id_):
-    for i,e  in enumerate(enemies):
+    for i, e in enumerate(enemies):
         print("%s with id %s. looking for %s" % (e, e.id, id_))
         if e.id == id_:
             return i
 
     raise SMRError('Enemy with id %d could not be found' % id_)
-

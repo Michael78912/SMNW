@@ -134,7 +134,8 @@ class Stage:
         """update the stage, and everything related to it."""
         state = self.game_state
 
-        terrain_surf = self.terrain.build_surface()
+        terrain_surf = self.terrain.built_image if self.terrain.built_image is not None else self.terrain.build_surface()
+        
 
         display = state['MAIN_DISPLAY_SURF']
 
@@ -147,6 +148,12 @@ class Stage:
         current_screen.draw(state)
 
         letters = []
+
+        for particle in state['PARTICLES']:
+            particle.draw(display)
+        
+        for projectile in state['PROJECTILES']:
+            projectile.draw(display)
 
         for event in events:
             check_quit(event)

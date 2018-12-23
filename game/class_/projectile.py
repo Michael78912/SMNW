@@ -1,72 +1,27 @@
-import pygame as pg
+"""class for representing a projectiile.
+It is up to the class using the projectile to
+stop it.
+"""
 
-try:
-    from _internal import PICS
-    from sprite import SMRSprite
-except ImportError:
-    from .sprite import SMRSprite
-    from ._internal import PICS
+class Projectile:
+    """represents a projectile"""
 
-class Projectile(SMRSprite):
-    """
-    Projectile, is as expected a projectile.
-    It is used as a subclass for other types of projectiles.
-    """
+    path = None
+    pos = (-1, -1)
 
-    def __init__(self, img, motion, colour, pos, main_game_state):
-        SMRSprite.__init__(self, main_game_state, None, pos)
-        self.img = PICS['Attacks'][img][colour]
-        self.motion = motion
-
-
-
-    def get_path(self, target, set_property=True):
-        if self.motion == ARC:
-            path = self.get_parabola(target)
-        elif self.motion == STRAIGHT:
-            raise NotImplementedError('the method is not implemented')
-            # path = self.get_straight_path(target)
-        else:
-            raise TypeError('%s is not a valid motion argument' % self.motion)
-
-        if set_property:
-            self.path = path
-
-        return path
-
-    def get_straight_path(self, target):
-        """
-        returns a list of a line, similar to 
-        get_parabola, but a straight line.
-        """
-        x1, x2 = self.topleft
-        y1, y2 = target
-        m = (y2 - y1) / (x - x1)
-        
-
-    def get_parabola(self, target):
-        """
-        finds and returns a parabola,
-        in the form of a path, for the projectile to 
-        move along.
-        """
-
-        pt2 = tarx, tary = target
-        pt1 = charx, chary = self.topleft
-
-        array = []
-        i = charx
-
-        while i <= 610 and i >= -1000:
-            array.append((i, round((chary - tary) / ((charx-tarx)*(charx-tarx)) * pow((i - tarx), 2) + tary)))
-            if tarx >= charx:
-                i += 1
-            else:
-                i -= 1
-
-        return array
-
-
-
-STRAIGHT = 0
-ARC = 1
+    def __init__(self, image, path_factory, lifespan=-1):
+        """if lifespan is -1, it can last forever."""
+        self.image = image
+        self.path_factory = path_factory
+        # self.pos = next(path_factory)
+    
+    def start(self, pt1, pt2):
+        """start the projectile"""
+        self.path = self.path_factory(pt1, pt2)
+        self.pos = next(self.path)
+    
+    def draw(self, surf):
+        """draw the projectile to surf"""
+        surf.blit(self.image() if callable(self.image) else self.image, self.pos)
+        self.pos = next(self.path)
+    

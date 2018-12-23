@@ -17,14 +17,26 @@ MENU_AREA = pg.Rect((800, 200), (0, 400))
 CLOCK = pg.time.Clock()
 FPS = 60
 
+def secondly_check(game_state):
+    """
+    run this every second or so. it will choose to check some things.
+    """
+    game_state['PARTICLES'] = list(filter(lambda x: x.lifespan != 0, game_state['PARTICLES']))
+
+
 def main():
     """run the game, after the title screen."""
     continue_ = True
+    frames = 0
     menu = pg.Surface((800, 200))
     menu.fill((0, 255, 0))
     MAIN_GAME_STATE['MOUSEDOWN'] = False
 
     while continue_:
+        frames += 1
+        if frames % 60 == 0:
+            # run secondly check
+            secondly_check(MAIN_GAME_STATE)
         MAIN_GAME_STATE['MOUSE_POS'] = pg.mouse.get_pos()
         events = [event for event in pg.event.get()]
         for e in events:
@@ -35,7 +47,7 @@ def main():
 
         elif MAIN_GAME_STATE['AREA'] == Area.STAGE:
             MAIN_GAME_STATE['STAGE'].update(events)
-        
+
         if MAIN_GAME_STATE.get('TERMINAL'):
             for e in events:
                 MAIN_GAME_STATE['TERMINAL'].add_event(e)

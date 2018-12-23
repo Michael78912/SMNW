@@ -72,7 +72,7 @@
     "boss_screen": null,
       "terrain": {
         "texture": "sand",
-        "template": "test"
+        "template": "flattish"
       },
       "comes_from": null
   }

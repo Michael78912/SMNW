@@ -7,6 +7,7 @@ from .., so this should be fine
 """
 
 try:
+    from .projectile import Projectile
     from .screen import Screen, PeacefulScreen
     from .backgroundimage import BackGroundImage
     from .stage import Stage
@@ -18,7 +19,7 @@ try:
     from .weapon import *
     from .characters import *
     from .enemies import *
-    from .attack import Attack
+    from .attack import RangedAttack, MeleeAttack
     import class_.enemies
     import class_.klass
 

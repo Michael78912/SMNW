@@ -9,6 +9,7 @@ _pg.init()
 
 import save
 import levelparser
+import paths as _paths
 import class_ as _class_
 from class_.sprite import SMRSprite as SpriteUtils
 
@@ -91,11 +92,11 @@ ALL_WEAPONS = []
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 DEFAULT_WEAPONS = {
-    'angel': _class_.Weapon('knife', 'Knife', 'black', 1, _class_.Attack(4, 20), 3),
-    'swordsman': _class_.Weapon('sword', 'Sword', 'gray', 1, _class_.Attack(7, 60), 7),
-    'spearman': _class_.Weapon('spear', 'Spear', 'gray', 1, _class_.Attack(5, 50), 12),
-    'archer': _class_.Weapon('bow', 'Bow', 'brown', 1, _class_.Attack(3, 30), 130),
-    'wizard': _class_.Weapon('wand', "Beginner's Spellbook", 'blue', 1, _class_.Attack(15, 120), 70),
+    'angel': _class_.Weapon('knife', 'Knife', 'black', 1, _class_.MeleeAttack(4, 20), 3),
+    'swordsman': _class_.Weapon('sword', 'Sword', 'gray', 1, _class_.MeleeAttack(7, 60), 7),
+    'spearman': _class_.Weapon('spear', 'Spear', 'gray', 1, _class_.MeleeAttack(5, 50), 12),
+    'archer': _class_.Weapon('bow', 'Bow', 'brown', 1, _class_.RangedAttack(3, 30, _class_.Projectile(_pg.Surface((10, 10)), _paths.line)), 130),
+    'wizard': _class_.Weapon('wand', "Beginner's Spellbook", 'blue', 1, _class_.MeleeAttack(15, 120), 70),
 
 }
 
@@ -124,6 +125,8 @@ if os.path.exists(SAVE_DIR):
         'INVENTORY': _INV,
         'MAIN_DISPLAY_SURF': SURFACE,
         'CURSOR': PICS['cursor'],
+        'PARTICLES': [],
+        'PROJECTILES': [],
     }
 else:
     MAIN_GAME_STATE = {
@@ -135,4 +138,6 @@ else:
         'INVENTORY': {},
         'MAIN_DISPLAY_SURF': SURFACE,
         'CURSOR': PICS['cursor'],
+        'PARTICLES': [],
+        'PROJECTILES': [],
     }

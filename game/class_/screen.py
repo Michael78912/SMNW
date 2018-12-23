@@ -24,25 +24,6 @@ class Screen:
             # must put Y coordinate for each enemy to spawn
     ):
 
-        # assert len(
-        #     all_enemies) == len(num_of_enemies_per_enemy
-        #                         ), "the enemies and quantities do not match"
-
-        # self.all_enemies = all_enemies
-        # self.num_of_enemies_per_enemy = num_of_enemies_per_enemy
-
-        # if spawn_mode == 'random':
-        #     new_spawn_mode = []
-
-        #     for enemy, quantity in zip(all_enemies, num_of_enemies_per_enemy):
-        #         for i in range(quantity):
-        #             new_spawn_mode.append((0 if enemy.area == 'ground' else
-        #                                    random.randint(1, 600), random.randint(1, 600)))
-        #     self.spawn_mode = new_spawn_mode
-
-        # else:
-        #     self.spawn_mode = spawn_mode
-
         self.total_enemies = sum(all_enemies.values())
         self.enemies = []
 
@@ -50,7 +31,7 @@ class Screen:
             self.enemies += [copy.copy(i) for x in range(all_enemies[i])]
 
         if spawn_mode == 'random':
-            self.spawn_mode = [random.randint(1, 800) \
+            self.spawn_mode = [random.randint(1, 775) \
                                for i in range(self.total_enemies)
                               ]
 
