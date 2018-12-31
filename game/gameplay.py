@@ -34,6 +34,7 @@ def main():
 
     while continue_:
         frames += 1
+        print('FPS: ', CLOCK.get_fps())
         if frames % 60 == 0:
             # run secondly check
             secondly_check(MAIN_GAME_STATE)

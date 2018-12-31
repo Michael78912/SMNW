@@ -95,7 +95,7 @@ DEFAULT_WEAPONS = {
     'angel': _class_.Weapon('knife', 'Knife', 'black', 1, _class_.MeleeAttack(4, 20), 3),
     'swordsman': _class_.Weapon('sword', 'Sword', 'gray', 1, _class_.MeleeAttack(7, 60), 7),
     'spearman': _class_.Weapon('spear', 'Spear', 'gray', 1, _class_.MeleeAttack(5, 50), 12),
-    'archer': _class_.Weapon('bow', 'Bow', 'brown', 1, _class_.RangedAttack(3, 30, _class_.Projectile(_pg.Surface((10, 10)), _paths.line)), 130),
+    'archer': _class_.Weapon('bow', 'Bow', 'brown', 1, _class_.RangedAttack(3, 30, _class_.Projectile(_pg.Surface((10, 10)), _paths.Line)), 130),
     'wizard': _class_.Weapon('wand', "Beginner's Spellbook", 'blue', 1, _class_.MeleeAttack(15, 120), 70),
 
 }

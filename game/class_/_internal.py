@@ -5,14 +5,9 @@ files in the class_ library rely on it
 (if i could remove it, I would) :(
 """
 
-from pprint import pprint
 import os
-import sys
 
 import pygame as pg
-from pygame.locals import *
-
-import random
 
 CHANGE_COLOUR_DIRS = ('characters_parts',
                       'heads',
@@ -106,13 +101,15 @@ def _gather_pics(dir='.'):
 
 
 def change_colour_surface(surface, r, g, b):
-    """changes the colour of all parts of a 
+    """changes the colour of all parts of a
     surface except for the transparent parts.
     """
     arr = pg.surfarray.pixels3d(surface)
     arr[:, :, 0] = r
     arr[:, :, 1] = g
     arr[:, :, 2] = b
+
+    return surface
 
 
 # def change_alpha_to_colour(surface, colour):
@@ -148,26 +145,6 @@ def change_alpha_to_colour(surf, alpha_to_colour):
                 if val == alpha_value:
                     colours[index1][index] = colour
                     alpha[index1][index] = 255
-
-
-def _Box(size, colour, pos, surface, alpha=None, image=None) -> tuple:
-    """
-    return a square rectangle, surface pair
-    uses MyRect
-    """
-    # print(pos)
-    new_surf = pg.surface.Surface(size)
-    new_surf.fill(colour)
-
-    if alpha is not None:
-        new_surf.set_alpha(alpha)
-
-    surface.blit(new_surf, pos)
-
-    if image is not None:
-        surface.blit(image, pos)
-
-    return MyRect(new_surf.get_rect(topleft=pos)), new_surf
 
 
 # pprint(PICS)

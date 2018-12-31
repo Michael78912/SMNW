@@ -8,6 +8,7 @@ definitely not to be used directly.
 class DropItem:
     def __init__(self, smallicon, largeicon, surface, stats_to_display=''):
         self.smallicon = smallicon
+        self.surface = surface
         self.largeicon = largeicon
         if isinstance(stats_to_display, dict):
             self.stats_to_display = stats_to_display
