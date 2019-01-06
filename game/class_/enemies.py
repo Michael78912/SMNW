@@ -5,12 +5,8 @@ decide to use something other than Blob and Stationary, I'll be fine.
 
 
 import random
-import contextlib
-
 
 from .enemy import Enemy
-from . import terrain
-
 
 __all__ = ['Blob', 'Stationary']
 
@@ -67,6 +63,8 @@ class Blob(Enemy):
         """draws enemy to screen at coordinates.
         using cartesian system.
         """
+        if self.dead:
+            return
         self.on_screen = True
         surface.blit(self.head.get_image(colour), coordinates)
         self.pos = coordinates
@@ -75,31 +73,45 @@ class Blob(Enemy):
         """attempt to move the blob.. If it can't move,
         then don't move!
         """
+
         if random.randint(1, self.chance_of_motion) != 1:
             return
 
-        block = terrain_obj.get_array()[:,
-                                        terrain_obj.px_to_blocks(self.pos[0])
+        # foot pos is where they are actually standing.
+        foot_pos = self.pos[0], self.pos[1] + self.size_px
+        pos_blocks = terrain_obj.px_pos_to_blocks(foot_pos)
 
-                                        ][terrain_obj.px_to_blocks(self.pos[1] + (self.size_px - 1))]
+        # we can use this column later to check if they are
+        # up against a wall or something
+        column = terrain_obj.grid[:,
+                                  pos_blocks[0]
+                                  ]
 
-        if terrain_obj.is_solid(block):
-            return
+        # the block we are currently standing on
+        current_block = terrain_obj[pos_blocks]
+
+        # fall the amount. (0.5 water. 0 solid block, 2 air)
+        self.pos = self.pos[0], self.pos[1] + current_block.solid
 
         current_x = self.pos[0]
 
+        # search all players
         possible_destinations = [player.image.topright[0]
                                  for player in all_players]
 
-        distances = []
-        for i in possible_destinations:
-            distances.append(current_x - i if i <=
-                             current_x else i - current_x)
+        # search all destinations and pull the distance from self
+        distances = [current_x - i if i <=
+                     current_x else i - current_x for i in possible_destinations]
 
-        distance = min(distances)
-        dest = possible_destinations[distances.index(distance)]
-        move_proper = random.randint(1, self.intelligence) == 1
+        # choose smallest distance to move to
+        dest = possible_destinations[distances.index(min(distances))]
+
+        # use self.intelligence to see if we move the proper direction or not
+        move_proper = random.randint(1, self.intelligence) != 1
+
+        # we want to move right if the destination is to the right
         move_right = dest >= current_x
+
         if move_right:
             # we *want* to move right
             # sorry for these lame comments, this logical stuff confuses me
@@ -108,90 +120,31 @@ class Blob(Enemy):
         else:
             move_right = move_right and not move_proper
 
-        blocks_y = terrain_obj.px_to_blocks(self.pos[1])
         if move_right:
-            column = terrain_obj.get_array()[:, terrain_obj.px_to_blocks(
-                current_x) + 1]
-            if terrain_obj.is_solid(column[blocks_y - 1]):
-                # solid to the top right of our precious little
-                # enemy! Uh oh. It can't move.
-                return
-            self.pos = (self.pos[0] + 1, self.pos[1])
+            column = terrain_obj.grid[:,
+                                      pos_blocks[0] + 1
+                                      ]
         else:
-            column = terrain_obj.get_array()[:, terrain_obj.px_to_blocks(
-                current_x) + 1]
-            if terrain_obj.is_solid(column[blocks_y - 1]):
-                return
-            self.pos = (self.pos[0] - 1, self.pos[1])
+            column = terrain_obj.grid[:,
+                                      pos_blocks[0] + 1
+                                      ]
 
-    def move_old(self, all_players, surface, terrain_obj):
-        # pylint: disable=too-many-locals
-        """moves the enemy towards the closest player to it.
-        the Blob does not move too much, and has a 1/4 (intelligence)
-        chance of moving the way away from the players.
-        """
-        if random.randint(1, self.chance_of_motion) == 1:
-            # innocent until proven guilty. (of being in a pit)
-            can_move = True
+        if column[int(pos_blocks[1]) - 1].solid == 0:
+            # solid block, can not move.
+            return
 
-            in_air = terrain.is_in_air(self.pos, terrain_obj, self.size * 10)
-            print(in_air)
+        self.pos = (
+            self.pos[0] + 1 if move_right else self.pos[0] - 1), self.pos[1]
 
-            current_block_x = terrain_obj.px_to_blocks(self.pos[0])
-            current_block_y = terrain_obj.px_to_blocks(self.pos[1])
-
-            right_column = list(terrain_obj.terrain2dlist_texts[terrain_obj.template]
-                                ['text'][:, current_block_x + 1])
-
-            left_column = list(terrain_obj.terrain2dlist_texts[terrain_obj.template]
-                               ['text'][:, current_block_x - 1])
-
-            top_levels = {i if obj == '*' else None for i,
-                          obj in enumerate(right_column)}
-            top_levels.remove(None)
-
-            if in_air:
-                # fall two pixels, because enemy is in air
-                self.fell_on_last = 1
-                self.pos = self.pos[0], self.pos[1] + 2
-
-            current_x = self.pos[0]
-
-            possible_destinations = [player.image.topright[0]
-                                     for player in all_players]
-
-            distances = []
-            for i in possible_destinations:
-                distances.append(current_x - i if i <=
-                                 current_x else i - current_x)
-
-            distance = min(distances)
-
-            dest = possible_destinations[distances.index(distance)]
-
-            move_proper = random.randint(1, self.intelligence) == 1
-
-            if dest >= current_x:
-                # greater. want to move to the right.
-                if move_proper:
-                    move_right = False
-                    self.pos = (self.pos[0] - 1, self.pos[1])
-                else:
-                    move_right = True
-                    self.pos = (self.pos[0] + 1, self.pos[1])
-
-            else:
-                # smaller. want to move to left.
-                if move_proper:
-                    move_right = False
-                    self.pos = (self.pos[0] + 1, self.pos[1])
-                else:
-                    move_right = True
-                    self.pos = (self.pos[0] - 1, self.pos[1])
-
-            # check to see if the enemy can't move.
+        self.draw(self.pos, surface)
 
 
 class Stationary(Blob):
     """similar to blob, but does n ot move."""
-    def move(*_): pass
+    def move(self, _, surface, terrain):
+        block = terrain[
+            terrain.px_pos_to_blocks(
+                self.pos
+            )
+        ]
+        self.pos = self.pos[0], self.pos[1] + block.solid

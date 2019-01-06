@@ -45,8 +45,8 @@ class Screen:
         if self.firstrun:
             game_state['_STAGE_DATA']['enemies'] = []
             for enemy, x in zip(self.enemies, self.spawn_mode):
-                ground_level = terrain.get_spawn_point(x, terrain.blocks_to_px(enemy.size))
-                enemy.draw((x, ground_level), game_state['MAIN_DISPLAY_SURF'])
+                ground_level = terrain.get_spawn_point(x) - enemy.size_px
+                enemy.draw((x , ground_level), game_state['MAIN_DISPLAY_SURF'])
                 game_state['_STAGE_DATA']['enemies'].append(enemy)
 
             for player in game_state['PLAYERS']:

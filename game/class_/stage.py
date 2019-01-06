@@ -4,6 +4,8 @@ from pygame.locals import QUIT, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION, KEY
 import pygame as pg
 import os
 
+from . import screen
+
 
 WHITE = (255, 255, 255)  # unbeaten
 GRAY = (211, 211, 211)  # beaten
@@ -134,14 +136,14 @@ class Stage:
         """update the stage, and everything related to it."""
         state = self.game_state
 
-        terrain_surf = self.terrain.built_image if self.terrain.built_image is not None else self.terrain.build_surface()
+        terrain_surf = self.terrain.built_image if self.terrain.built_image is not None else self.terrain.build()
         
 
         display = state['MAIN_DISPLAY_SURF']
 
         display.fill((0, 0, 0))
 
-        current_screen = self.all_screens[state['_STAGE_DATA']['screen_number']]
+        current_screen: screen.Screen = self.all_screens[state['_STAGE_DATA']['screen_number']]
 
         display.blit(terrain_surf, (0, 0))
 

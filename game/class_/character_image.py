@@ -126,15 +126,15 @@ class CharacterImage(SMRSprite):
             ]  # skeleton for 2D-lsit (First time to actually get to use Ellipsis!)
             rarm[0][0] = self.topright[0] - (self.sizex // 2)
             # X- coordinate should be directly on arm
-            rarm[0][1] = self.topright[1] - (self.sizey // 6 * 9)
+            rarm[0][1] = int(self.topright[1]) - (self.sizey // 6 * 9)
             # 3 quarters up the arm should be good
 
             # exactly on edge of player's hitbox
             rarm[1][0] = self.topright[0]
 
             # randomly on the top half of hitbox
-            rarm[1][1] = random.randint(self.topright[1] - (self.sizey // 2),
-                                        self.topright[1])
+            rarm[1][1] = random.randint(int(self.topright[1] - (self.sizey // 2)),
+                                        int(self.topright[1]))
 
             self.rarm = rarm
 
@@ -146,8 +146,8 @@ class CharacterImage(SMRSprite):
             # same coordinate for part that attaches to body is OK
             larm[0] = rarm[0]
             larm[1][0] = self.topleft[0]
-            larm[1][1] = random.randint(self.topleft[1] - (self.sizey // 2),
-                                        self.topright[1])
+            larm[1][1] = random.randint(int(self.topleft[1]) - (self.sizey // 2),
+                                        int(self.topright[1]))
 
             self.larm = larm
 
@@ -165,7 +165,7 @@ class CharacterImage(SMRSprite):
 
             self.body = pg.draw.line(surface, colour, start, end, 2)
 
-            head_center_pos = self.topright[0] - self.sizex // 2, self.topleft[1] - (
+            head_center_pos = self.topright[0] - self.sizex // 2, int(self.topleft[1]) - (
                 self.sizey + 2)
             self.head_center = head_center_pos
             self.head = {'center': head_center_pos, 'radius': self.head_radius}
@@ -207,7 +207,7 @@ class CharacterImage(SMRSprite):
         self.rect = pg.Rect(self.topright, self.hitbox)
 
 
-    def move_to_x(self, pos: 'x', surface, pixels=1, invisible=False):
+    def move_to_x(self, pos: 'x', surface, pixels=1):
         """
         moves the character image by pixels
         towards the destination.

@@ -2,100 +2,137 @@
 for stickman's new world.
 if the user settings
 """
-import tkinter as tk
+
 import os
-import json
-import platform
-try:
-    import pwd
-except ImportError:
-    # the OS is not linux
-    pass
 
-__all__ = ['main', 'load_settings', 'save']
+import pygame
 
-if platform.system() == 'Linux':
-    os.getlogin = lambda: pwd.getpwuid(os.getuid())[0]
+import database
 
-DEF_NAME = 'settings.json'
-USR_NAME = '.stickman_new_world{0}user_settings.json'.format(
-    '\\' if os.name == 'nt' else '/')
-HOME = 'C:\\Users\\{}\\'.format(
-    os.getlogin()) if os.name == 'nt' else '/home/{}/'.format(os.getlogin())
-print(HOME)
-print()
-
-SETTINGS_FILE_PATH = {
-    'posix':
-    HOME + USR_NAME if os.path.exists(HOME + USR_NAME) else 'settings.json',
-    'nt':
-    HOME + USR_NAME if os.path.exists(HOME + USR_NAME) else 'settings.json'
-}[os.name]
-
-SETTINGS_FILE = open(SETTINGS_FILE_PATH).read()
-
-USR_SAVE_PATH = HOME + '{0}.stickman_new_world{0}'.format(
-    '\\' if os.name == 'nt' else '/')
-USR_SAVE_FILE = HOME + USR_NAME
-
-print(USR_SAVE_PATH)
-print(SETTINGS_FILE_PATH)
+pygame.init()
 
 
-def load_settings():
-    settings = json.JSONDecoder().decode(SETTINGS_FILE)
-    return settings
+def get_switches(game_state):
+    """get a bunch of Switch objects each representing the thing."""
+    settings = game_state['SETTINGS']
+
+    switches = []
+
+    y = 200
+
+    for setting, value in zip(settings, settings.values()):
+        switches.append(Switch((400, y), value, setting))
+        y += 100
+
+    return switches
 
 
-def main():
-    root = tk.Tk()
-    root.geometry('300x200')
-    root.title('settings')
-    root.protocol('WM_DELETE_WINDOW', lambda: save(usr_settings, root))
+class Switch:
+    """class for displaying a switch.
+    will show as on if true, as off if false.
+    """
 
-    settings = load_settings()
-    settings_ = {}
-    print(settings)
-    for key, value in zip(settings, settings.values()):
-        if isinstance(value, bool):
-            settings_[key] = value
-    settings = settings_
-    print(settings)
-    usr_settings = settings.copy()
+    rect = None
 
-    for i in usr_settings:
-        var = tk.IntVar()
-        var.set(usr_settings[i])
-        usr_settings[i] = var
+    def __init__(self, pos, state, text):
+        self.pos = pos
+        self.state = state
+        self.text = text
 
-    for key, value, num in zip(settings, settings.values(), range(
-            len(settings))):
-        print(key, value, usr_settings)
-        tk.Checkbutton(
-            root, text=key, variable=usr_settings[key]).grid(
-                row=num, sticky=tk.W)
+    def draw(self, surf):
+        """draw the switch to surf."""
+        font = pygame.font.Font(os.path.join('data', 'Michael`s Font.ttf'), 22)
+        text: pygame.Surface = font.render(self.text, True, (255, 255, 255))
+        width = text.get_width() + 70
+        switchsurf = pygame.Surface((width, 24))
+        switchsurf.blit(text, (0, 0))
+        switchsurf.blit(self._surface, (text.get_width() + 10, 0))
+        rect: pygame.Rect = switchsurf.get_rect()
+        rect.center = self.pos
+        self.rect = rect
+        surf.blit(switchsurf, rect)
 
-    tk.mainloop()
-
-
-def save(settings, win):
-
-    for i in settings:
-        # the settings are still IntVars
-        var = bool(settings[i].get())
-        # change them to normal ints
-        settings[i] = var
-
-    win.destroy()
-
-    if not os.path.exists(USR_SAVE_PATH):
-        os.mkdir(USR_SAVE_PATH)
-
-    # i like having an indent, for when i look at it :)
-    json_settings = json.dumps(settings, indent=4)
-
-    with open(USR_SAVE_FILE, 'w') as settings_file:
-        settings_file.write(json_settings)
+    @property
+    def _surface(self):
+        surf = pygame.Surface((60, 24))
+        surf.fill((0, 0, 255))
+        square_rect = pygame.Rect(
+            4 if not self.state else 40,
+            4,
+            16,
+            16,
+        )
+        surf.blit(pygame.Surface((16, 16)), square_rect)
+        return surf
 
 
-main()
+def main(game_state, bgimage):
+    """run the main settings function."""
+    
+    # font file
+    fontfile = os.path.join('data', 'Michael`s Font.ttf')
+    # font objects
+    font_header = pygame.font.Font(fontfile, 70)
+    font_button = pygame.font.Font(fontfile, 30)
+
+    # extract the two needed things for this function
+    settings = game_state['SETTINGS']
+    surf = game_state['MAIN_DISPLAY_SURF']
+
+    # generate the list of switches needed for each setting
+    switches = get_switches(game_state)
+
+    # button to return to the main screen.
+    return_btn: pygame.Surface = font_button.render('Return', True, (255, 255, 255))
+
+    # rectangle object bound to return button
+    return_rect = return_btn.get_rect(center=(400, 560))
+
+    # header to be drawn and show the user where they are.
+    header = font_header.render('Settings', True, (255, 255, 255))
+
+    # used to determine where the header should go.
+    header_rect = header.get_rect(center=(400, 70))
+
+    while True:
+        # background image to be drawn first
+        surf.blit(bgimage, (0, 0))
+
+        # draw the return button
+        surf.blit(return_btn, return_rect)
+
+        # draw the settings header
+        surf.blit(header, header_rect)
+
+        # draw each switch
+        for switch in switches:
+            switch.draw(surf)
+
+        # event handler
+        for event in pygame.event.get():
+            # check for quits
+            if event.type == pygame.QUIT:
+                raise SystemExit
+
+            # check to see if anything was clicked on
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # check to see if the return button was clicked.
+                if return_rect.collidepoint(event.pos):
+                    # return to previous screen
+                    return
+
+                # check all switches
+                for switch in switches:
+                    # someone clicked on a switch
+                    if switch.rect.collidepoint(event.pos):
+                        # switch the state (False -> True, True -> False)
+                        switch.state = not switch.state
+                        # update the setting
+                        settings[switch.text] = switch.state
+                        print(settings)
+        # add the cursor (always in the foreground)
+        surf.blit(database.PICS['cursor'], pygame.mouse.get_pos())
+        # update screen
+        pygame.display.update()
+
+    # Switch(None, False, "Hello").draw(pygame.Surface((1, 1)))

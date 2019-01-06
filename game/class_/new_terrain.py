@@ -7,14 +7,19 @@ actually use a block called "Sand". (Mostly inspired by Minecraft's block system
 
 __all__ = ['Terrain']
 
+import random
 import re
 import time
+import logging
 
 import numpy
 import pygame
 from lark import Lark, Transformer
 
-import block
+try:
+    import block
+except ImportError:
+    from . import block
 
 # screen size for actual gameplay
 X, Y = 800, 400
@@ -47,6 +52,7 @@ class Terrain:
     """default handler for terrain in SMNW."""
     raw = ''
     file = ''
+    built_image = None
     grid = None
     size = 10
     air = (0, 0, 0)
@@ -61,24 +67,49 @@ class Terrain:
             "Invalid colour given. air: {} water: {}".format(
                 self.air, self.water)
 
-    def __init__(self):
-        pass
-
     def __repr__(self):
-        return "Terrain With {.size = {size},\
-         .air = {air}, .water = {water}, .file = {file}}".format(**self.__dict__)
+        return "Terrain With {{.size = {size},\
+         .air = {air}, .water = {water}, .file = {file}}}".format(
+             size=self.size,
+             air=self.air,
+             water=self.water,
+             file=self.file,
+         )
 
     def __str__(self):
         # basically just return the terrain file (stripped of comments)
         return self.raw
 
-    def __getitem__(self, key):
+    def __getitem__(self, pos):
         # take a block ID or position, and return the block with that ID
-        pass
+        return self.grid[int(pos[1])] [pos[0]]
 
     def __setitem__(self, pos, value):
         # take a position and set it to a new block
-        pass
+        self.grid[pos[1]][pos[0]] = value
+    
+    def blocks_to_px(self, blocks):
+        """convert blocks to pixels"""
+        return blocks * self.size
+    
+    def px_to_blocks(self, pixels):
+        """convert pixels to blocks"""
+        return pixels // self.size
+    
+    def px_pos_to_blocks(self, pos):
+        """convert the point (in pixels) given to blocks."""
+        return (
+            pos[0] // self.size,
+            pos[1] // self.size,
+        )
+
+    def get_pixels(self, pixels):
+        """get a valid Pixels object based on blocks."""
+        return _Pixels(pixels // self.size, pixels)
+
+    def is_solid_at(self, pos):
+        """return true if the block given is fully solid."""
+        return self[pos].solid == 1
 
     def load(self, file, template):
         """load from file. create an array that contains
@@ -94,7 +125,7 @@ class Terrain:
         header_parser = Lark(HEADER_GRAMAMAR)
 
         # find the header, and create an AST from the found header.
-        header = re.search(r'@.*', data)
+        header = re.search(r'@.(.*=.*)*', data)
         tree = header_parser.parse(header.group(0))
 
         # use the data from the header to transform the terrain object
@@ -139,6 +170,13 @@ class Terrain:
                     self.grid[y][x] = block.Air((x, y), airsurf)
                 x += 1
             y += 1
+    
+    def get_spawn_point(self, x):
+        """get and return a valid spawn point given the column."""
+        column = self.grid[:, self.px_to_blocks(x)]
+        print(column)
+        top_levels = [y for y, block in enumerate(column) if block.top]
+        return self.blocks_to_px(random.choice(top_levels))
 
     def build(self):
         """build surface"""
@@ -148,11 +186,16 @@ class Terrain:
         for y in range(0, Y // self.size):
             for x in range(0, X // self.size):
                 current_block = self.grid[y][x]
-                image.blit(current_block.image,
+                try:
+                    image.blit(current_block.image,
                            current_block.get_rect(self.size))
+                except AttributeError:
+                    logging.warning('block at position (%d, %d) is null', x, y)
 
         time2 = time.time()
         print('took', time2 - time1, 'seconds to build')
+
+        self.built_image = image
 
         return image
 
@@ -184,10 +227,19 @@ class HeaderTransformer(Transformer):
         return int(val[0])
 
 
+class _Pixels:
+    """simple class for representing pixels."""
+
+    def __init__(self, pixels=0, blocks=0):
+
+        self.pixels = pixels
+        self.blocks = blocks
+
+
 def main():
     """test function"""
     terrain = Terrain()
-    terrain.load(open('terrains\\flattish.smr-terrain'), 'dirt')
+    terrain.load(open('terrains\\downhill.smr-terrain'), 'dirt')
     pygame.image.save(terrain.build(), "howdy.png")
 
 

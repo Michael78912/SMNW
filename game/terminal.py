@@ -45,7 +45,7 @@ def start_terminal(pos=(150, 0)):
         ),
         game_state['MAIN_DISPLAY_SURF'],
         pos,
-        prompt="SMNW devug shell> "
+        prompt="SMNW debug shell> "
     )
     shell.bind()
     # remove the ~ sent to the terminal.

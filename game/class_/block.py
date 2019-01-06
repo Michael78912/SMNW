@@ -43,7 +43,7 @@ def block(string, template, airsurf, watersurf, pos):
 class Block:
     """base class for all blocks in SMNW."""
     image = None
-    solid = 1
+    solid = 0
     top = False
     # equivalent to "health" on enemies/characters. set to -1 to be indestructible.
     hardness = 30
@@ -71,7 +71,6 @@ class SolidBlock(Block):
     image will return different if it is top or not, so set _image instead
     of image.
     """
-    solid = 1
     _image = {'0': None, '1': None}
 
     def __init__(self, pos, top=False):
@@ -89,7 +88,7 @@ class SolidBlock(Block):
 
 class Air(Block):
     """air is a transparent, unbreakable block present in the absence of others."""
-    solid = 0
+    solid = 2
     hardness = -1
 
     def __init__(self, pos, image):
@@ -111,6 +110,7 @@ class TopWater(Water):
     """exactly the same as its normal couterpart, except slightly more
     stupid looking.
     """
+    top = True
 
     def __init__(self, pos, colour, air_surface):
         super().__init__(pos, change_colour_surface(
@@ -137,6 +137,10 @@ class Dirt2(Dirt):
     """a slightly-less dirty dirt."""
     _image = PICS['terrain_templates']['light_dirt']
 
+
+class HellStone(SolidBlock):
+    """a very hell-like stone."""
+    _image = PICS['terrain_templates']['hellstone']
 
 class Sand(SolidBlock):
     """
@@ -171,6 +175,7 @@ TEMPLATES = {
     'dirt': Dirt,
     'light_dirt': Dirt2,
     'stone': Stone,
+    'hellstone': HellStone,
 }
 
 

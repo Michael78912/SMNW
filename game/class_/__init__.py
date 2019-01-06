@@ -1,5 +1,5 @@
 """
-__init__.py- this is the only module that will 
+__init__.py- this is the only module that will
 be loaded on calling 'import class_', so i thought
 it would be good to bundle everything in here.
 it is expected that this will only be called
@@ -7,6 +7,7 @@ from .., so this should be fine
 """
 
 try:
+    from . import new_terrain
     from .projectile import Projectile
     from .screen import Screen, PeacefulScreen
     from .backgroundimage import BackGroundImage

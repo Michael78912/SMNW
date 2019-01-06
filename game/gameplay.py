@@ -3,11 +3,13 @@ handle all events in this file, display terrain, handle deaths,
 status effects, etc...
 """
 
-from pygame.locals import QUIT, MOUSEBUTTONDOWN
+import logging
+
 import pygame as pg
+from pygame.locals import MOUSEBUTTONDOWN, QUIT
 
 import terminal
-from database import MAIN_GAME_STATE, PICS, ALL_LEVELS, Area
+from database import ALL_LEVELS, MAIN_GAME_STATE, PICS, Area
 
 SURFACE = MAIN_GAME_STATE['MAIN_DISPLAY_SURF']
 
@@ -35,13 +37,18 @@ def main():
     while continue_:
         frames += 1
         print('FPS: ', CLOCK.get_fps())
+        if frames % (60 * 30) == 0:
+            logging.debug('FPS: %f', CLOCK.get_fps())
         if frames % 60 == 0:
             # run secondly check
             secondly_check(MAIN_GAME_STATE)
+
         MAIN_GAME_STATE['MOUSE_POS'] = pg.mouse.get_pos()
         events = [event for event in pg.event.get()]
+
         for e in events:
             terminal.handle(e)
+
         if MAIN_GAME_STATE['AREA'] == Area.MAP:
             draw_map()
             handle_map()

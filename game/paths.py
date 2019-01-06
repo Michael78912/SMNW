@@ -33,7 +33,7 @@ def _line(pt1, pt2):
 
     for x in x_generator:
         y = round(m * (x - x1) + y1)
-        for new_y in range(prev_y, y):
+        for new_y in range(round(prev_y), y):
             yield (x, new_y)
         yield (x, y)
         prev_y = y

@@ -1,18 +1,15 @@
 """klass.py (I know it's spelt wrong, OK)?
-base class for all character classes in SMNW. handles 
+base class for all character classes in SMNW. handles
 image generation, spawning, and default movement, and attacking.
 """
-import logging
 import random
 
-from . import terrain
+from . import new_terrain
+from .block import Block
 from .character_image import CharacterImage
 from .smr_error import SMRError
 
-
 BEIGE = (232, 202, 145)
-
-
 
 
 class Class:
@@ -91,80 +88,94 @@ class Class:
 
         x = 15    # we always want to spawn characters at x=15.
 
-        y = game_state['_STAGE_DATA']['stage'].terrain.get_spawn_point(x, self.image.sizey)
-        self.image.update_coords((x, y))
+        y = game_state['_STAGE_DATA']['stage'].terrain.get_spawn_point(x)
+        self.image.update_coords((x, y - 10))
         self.image.build_image(display, BEIGE)
 
     def update(self, game_state):
-        """attempt to move, and attack."""
-        terrain_obj = game_state['_STAGE_DATA']['stage'].terrain
+        # tell our weapon that another frame has passed, so it may now be able to attack
         self.weapon.update()
+        # the terrain object currently in use.
+        terrain: new_terrain.Terrain = game_state['_STAGE_DATA']['stage'].terrain
 
-        current_block_x = terrain_obj.px_to_blocks(self.image.topleft[0])
-        current_block_y = terrain_obj.px_to_blocks(self.image.topleft[1])
-        next_column = list(
-            terrain_obj.terrain2dlist_texts[terrain_obj.template]['text'][:, current_block_x + 1])
-        top_levels = {i if obj == '*' else None for i,
-                      obj in enumerate(next_column)}
-        top_levels.remove(None)
+        # position of the feet. (can be a little off, you can sink into
+        # the ground a bit)
+        footpos = self.image.topleft[0], self.image.topleft[1] + 10
 
+        # indexes of blocks on both axes.
+        current_block_x, current_block_y = terrain.px_pos_to_blocks(
+            footpos
+        )
+
+        # block we are currently standing on.
+        block: Block = terrain[current_block_x, current_block_y]
+
+        # check to see if we're underground (it happens)
+        if block.solid == 0:
+            self.image.update_coords((self.image.topleft[0], self.image.topleft[1] - 2))
+
+        # enemy we are moving toward, and will also attempt to attack later on
+        try:
+            enemy = get_closest_enemy(game_state, self.image.topleft[0])
+        except ValueError:
+            # no more enemies remaining.
+            enemy = None
+
+        # we may need to fall a little bit
+        self.image.update_coords(
+            (self.image.topleft[0], self.image.topleft[1] + block.solid))
+
+        # characters are more smart than blobs, so they always know the right way to go.
+        distance = self.image.topleft[0] - enemy.pos[0]
+        # choose the offset. negative to move to the left, positive to the right
+        offset = -2 if distance > 0 else 2
+
+        # select the proposed position. now we need to see if we can move there.
+        proposed_pos = self.image.topright[0] + offset, self.image.topright[1]
+
+        # this is the column we will be moving towards, need to check it.
+        column = terrain.grid[:, terrain.px_to_blocks(
+            proposed_pos[0]
+        )]
+
+        # get the top levels in the next column
+        top_levels = {i for i,
+                      obj in enumerate(column) if obj.top}
+
+        # the X-position of the enemy we are going towards
+        target_x = enemy.pos[0]
+
+        # boolean to see if we can move or not
         can_move = True
 
         if top_levels:
             # get how far they would have to move.
 
-            distance = terrain_obj.blocks_to_px(
-                min([current_block_y - i for i in top_levels]) + 1)
+            distance = terrain.blocks_to_px(
+                min([current_block_y - i for i in top_levels]))
 
             if 0 < distance <= self.jump_height:
-                print('howdy. jumping...')
-                # 10 pixels is the maximum a player can climb, without any sort of tool.
-                self.image.update_coords((self.image.x, self.image.y - 12))
+                # we need to jump, since there we can go that high.
+                self.image.update_coords((self.image.x, self.image.y - self.jump_height))
 
             elif distance > self.jump_height:
                 # can not jump, and can not move. stay still.
-                print('cannot move')
                 can_move = False
 
-        in_air = terrain.is_in_air(self.image.topleft, terrain_obj, 5)
-        if in_air:
-            self.image.update_coords(
-                (self.image.topleft[0], self.image.topleft[1] + 1))
-            print(self, "needs to fall")
-
-        try:
-            motion_target = get_closest_enemy(
-                game_state, self.image.topright[0])
-        except ValueError:
-            # no more enemies remaining, `min` will raise a ValueError.
-            return
-        target_x = motion_target.pos[0]
-
-        x = self.image.topright[0]
-
+        x = self.image.topleft[0]
         distance = target_x - x if target_x >= x else x - target_x
 
+        # if we are going to attack, don't move.
+        can_move = can_move and distance >= self.weapon.range
         if distance <= self.weapon.range:
             # self.weapon.attack_enemy(motion_target)
-            self.attack(motion_target, game_state)
-        print(((self.image.topright[0] - target_x) if self.image.topright[0] > target_x else (target_x - self.image.topright[0])))
-
-        can_move = random.randint(0, self.chance_of_motion) == 1 and can_move
-        # can_move = can_move and ((self.image.topright[0] - target_x) if self.image.topright[0] > target_x else (target_x - self.image.topright[0]))
-        can_move = can_move and distance >= self.weapon.range
-
+            self.attack(enemy, game_state)
         if can_move:
             print(self, "moving...")
 
             self.image.move_to_x(self.image.topright[0] + self.max_motion,
                                  game_state['MAIN_DISPLAY_SURF'],
                                  pixels=random.randint(1, self.max_motion))
-
-        if game_state['MOUSEDOWN']:
-            if self.image.rect.collidepoint(game_state['MOUSE_POS']):
-                self.image.update_coords(game_state['MOUSE_POS'])
-
-        # game_state['MAIN_DISPLAY_SURF'].blit(self.picture, self.image.topright)
 
         update = random.randint(0, self._chance_of_update) == 1
         if distance <= self.weapon.range:
@@ -176,6 +187,87 @@ class Class:
 
         self.image.build_image(
             game_state['MAIN_DISPLAY_SURF'], BEIGE, rebuild=update)
+
+    # def update(self, game_state):
+    #     """attempt to move, and attack."""
+    #     terrain_obj = game_state['_STAGE_DATA']['stage'].terrain
+    #     self.weapon.update()
+
+    #     current_block_x, current_block_y = terrain_obj.px_pos_to_blocks(
+    #         self.image.bottomleft
+    #     )
+
+    #     next_column = list(
+    #         terrain_obj.grid[:, current_block_x + 1])
+    #     top_levels = {i if obj.top else None for i,
+    #                   obj in enumerate(next_column)}
+    #     top_levels.remove(None)
+
+    #     can_move = True
+
+    #     if top_levels:
+    #         # get how far they would have to move.
+
+    #         distance = terrain_obj.blocks_to_px(
+    #             min([current_block_y - i for i in top_levels]) + 1)
+
+    #         if 0 < distance <= self.jump_height:
+    #             # 10 pixels is the maximum a player can climb, without any sort of tool.
+    #             self.image.update_coords((self.image.x, self.image.y - 12))
+
+    #         elif distance > self.jump_height:
+    #             # can not jump, and can not move. stay still.
+    #             can_move = False
+
+    #     in_air = terrain_obj[terrain_obj.px_pos_to_blocks(
+    #         self.image.topleft
+    #     )].solid != 0
+    #     if in_air:
+    #         self.image.update_coords(
+    #             (self.image.topleft[0], self.image.topleft[1] + 1))
+
+    #     try:
+    #         motion_target = get_closest_enemy(
+    #             game_state, self.image.topright[0])
+    #     except ValueError:
+    #         # no more enemies remaining, `min` will raise a ValueError.
+    #         return
+    #     target_x = motion_target.pos[0]
+
+    #     x = self.image.topright[0]
+
+    #     distance = target_x - x if target_x >= x else x - target_x
+
+    #
+    #     print(((self.image.topright[0] - target_x) if self.image.topright[0] > target_x else (target_x - self.image.topright[0])))
+
+    #     can_move = random.randint(0, self.chance_of_motion) == 1 and can_move
+    #     # can_move = can_move and ((self.image.topright[0] - target_x) if self.image.topright[0] > target_x else (target_x - self.image.topright[0]))
+    #     can_move = can_move and distance >= self.weapon.range
+
+    #     if can_move:
+    #         print(self, "moving...")
+
+    #         self.image.move_to_x(self.image.topright[0] + self.max_motion,
+    #                              game_state['MAIN_DISPLAY_SURF'],
+    #                              pixels=random.randint(1, self.max_motion))
+
+    #     if game_state['MOUSEDOWN']:
+    #         if self.image.rect.collidepoint(game_state['MOUSE_POS']):
+    #             self.image.update_coords(game_state['MOUSE_POS'])
+
+    #     # game_state['MAIN_DISPLAY_SURF'].blit(self.picture, self.image.topright)
+
+    #     update = random.randint(0, self._chance_of_update) == 1
+    #     if distance <= self.weapon.range:
+    #         update = False
+
+    #     if not self.image.has_drawn:
+    #         #  needs to draw at least once. override.
+    #         update = True
+
+    #     self.image.build_image(
+    #         game_state['MAIN_DISPLAY_SURF'], BEIGE, rebuild=update)
 
     def attack(self, target, game_state):
         """attack the target enemy."""

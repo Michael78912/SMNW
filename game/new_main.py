@@ -2,23 +2,26 @@
 for starting the game.
 """
 
-from argparse import Namespace
 import copy
 import logging
 import os
+from argparse import Namespace
+
+import pygame as pg
+from pygame.locals import MOUSEBUTTONDOWN, MOUSEMOTION, QUIT
+
+import class_
+import database
+import gameplay
+import logs
+import settings
+import terminal
+from class_.character_image import CharacterImage
+from database import COLOURS, MAIN_GAME_STATE, Area
 
 # pylint: disable=no-name-in-module
 
-from pygame.locals import QUIT, MOUSEBUTTONDOWN, MOUSEMOTION
-import pygame as pg
 
-import logs
-from class_.character_image import CharacterImage
-import class_
-from database import COLOURS, MAIN_GAME_STATE, Area
-import database
-import gameplay
-import terminal
 
 
 # window sizes
@@ -233,15 +236,19 @@ def main():
                 continue_ = not continue_
         pg.display.update()
 
-    func = lambda: None
-    continue_ = True
-    rects = draw_choices()
+
 
     pg.mixer.music.load(os.path.join(
         os.getcwd(), 'music', 'smnwtheme.mp3'
     ))
     pg.mixer.music.play(-1)   # loop forever, until stopped
 
+    choose_function()
+
+def choose_function():
+    func = lambda: None
+    continue_ = True
+    rects = draw_choices()
     while continue_:
         SURFACE.blit(PICS['menu_background'], (0, 0))
         
@@ -473,7 +480,6 @@ def new_game():
                 return i
 
     continue_ = True
-    num_selected = 0
 
     next_button = ClickableLabel(
         "Next", (700, 420), lambda: None, WHITE, textsize=50)
@@ -535,11 +541,11 @@ def new_game():
 
         if MAIN_GAME_STATE.get('TERMINAL') is not None:
             MAIN_GAME_STATE['TERMINAL'].threaded_update()
-        
+
         if MAIN_GAME_STATE['AREA'] != Area.TITLE:
             continue_ = False
             gameplay.main()
-        
+
         SURFACE.blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
         pg.display.update()
         CLOCK.tick(24)
@@ -581,10 +587,15 @@ class FakeWeapon:
         self.colour = colour
 
 
+def start_settings():
+    """start the settings function, and return to title screen."""
+    settings.main(MAIN_GAME_STATE, PICS['menu_background'])
+    choose_function()
+
 RECT_FUNCS = [
     lambda: None,
     new_game,
-    lambda: None,
+    start_settings,
 ]
 
 
@@ -593,7 +604,10 @@ if __name__ == '__main__':
         main()
     except Exception:
         logging.exception("Exception Encountered")
-        logging.debug('exiting game.')
         raise
+    
     except SystemExit:
+        logging.debug("Exiting normally.")
+
+    finally:
         logging.debug('exiting game.')

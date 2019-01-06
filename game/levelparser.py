@@ -3,8 +3,6 @@
 import json
 import os
 
-import pygame
-
 import class_
 
 
@@ -34,8 +32,8 @@ def get_levels(mainsurf):
 
             terrain = class_.new_terrain.Terrain()
             file = os.path.join(
-                'terrains', items['terrain']['texture']) + '.smr-terrain'
-            terrain.load(open(file), items['terrain']['template'])
+                'terrains', items['terrain']['template']) + '.smr-terrain'
+            terrain.load(open(file), items['terrain']['texture'])
         stage = class_.Stage(
             name,
             position_on_map=tuple(items['position']),
@@ -49,3 +47,4 @@ def get_levels(mainsurf):
 
     return stages
 # hi
+print(get_levels(__import__('pygame').Surface((10, 10))))
