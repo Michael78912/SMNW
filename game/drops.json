@@ -1,0 +1,73 @@
+{
+    "Weapon_cfg": {"type": "class_", "range": "range_"},
+    "Weapon": [
+        {
+            "type": "sword",
+            "name": "Sword",
+            "colour": "gray",
+            "level": 1,
+            "range": 7,
+            "attack": {
+                "projectile": null,
+                "damage": [5, 9],
+                "cd": 60
+            }
+        },
+        {
+            "type": "knife",
+            "name": "Knife",
+            "colour": "gray",
+            "level": 1,
+            "range": 3,
+            "attack": {
+                "projectile": null,
+                "damage": [3, 5],
+                "cd": 20
+            }
+        },
+        {
+            "type": "spear",
+            "name": "Spear",
+            "colour": "gray",
+            "level": 1,
+            "range": 12,
+            "attack": {
+                "projectile": null,
+                "damage": [4, 6],
+                "cd": 50
+            }
+        },
+        {
+            "type": "bow",
+            "name": "Bow",
+            "colour": "brown",
+            "level": 1,
+            "range": 130,
+            "attack": {
+                "prjectile": {
+                    "pic": "arrow",
+                    "path": "Line"
+                },
+                "damage": [2, 4],
+                "cd": 50
+            }
+        },
+        {
+            "type": "book",
+            "name": "Beginners Spellbook",
+            "colour": "brown",
+            "level": 1,
+            "range": 70,
+            "attack": {
+                "projectile": null,
+                "damage": [12, 16],
+                "cd": 120
+            }
+
+        }
+    ],
+    "Food": [],
+    "Compo": [],
+    "Armour": [],
+    "other": []
+}

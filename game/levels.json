@@ -71,8 +71,8 @@
     ],
     "boss_screen": null,
       "terrain": {
-        "texture": "hellstone",
-        "template": "uphill"
+        "texture": "dirt",
+        "template": "flattish"
       },
       "comes_from": null
   }

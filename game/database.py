@@ -1,3 +1,9 @@
+import picture_collect
+from class_.sprite import SMRSprite as SpriteUtils
+import class_ as _class_
+import paths as _paths
+import levelparser
+import save
 import json as _json
 import os
 import enum
@@ -7,11 +13,6 @@ import pygame as _pg
 _pg.mixer.pre_init(44100, 16, 2, 4096)
 _pg.init()
 
-import save
-import levelparser
-import paths as _paths
-import class_ as _class_
-from class_.sprite import SMRSprite as SpriteUtils
 
 _pg.display.set_caption("Stickman's New World")
 _pg.display.set_icon(_pg.image.load(os.path.join('data', 'game_icon.png')))
@@ -23,14 +24,13 @@ _HOME = os.getenv('USERPROFILE') or os.getenv("HOME")
 SAVE_DIR = os.path.join(_HOME, '.stickman_new_world')
 
 
-
-
 class Area(enum.Enum):
     """area of the game currently."""
     TITLE = 0
     MAP = 1
     STAGE = 2
     PAUSE = 3
+    BOSS = 4
 
 
 # dictionary of color strings containing RGB values
@@ -78,7 +78,6 @@ ALL_CLASSES = ['Swordsman', 'Spearman', 'Wizard', 'Archer', 'Angel']
 # print(ALL)
 
 
-
 ALL_TERRAINS = [
     _class_.Terrain('dirt', 'flat'),
 ]
@@ -91,11 +90,14 @@ ALL_WEAPONS = []
 # "remember to add a 'Spicy Shot' magic book later." (Alvin Gu, Oct 26, 2018) #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+
+PICS = picture_collect.gather_pics('data')
+
 DEFAULT_WEAPONS = {
     'angel': _class_.Weapon('knife', 'Knife', 'black', 1, _class_.MeleeAttack(4, 20), 3),
     'swordsman': _class_.Weapon('sword', 'Sword', 'gray', 1, _class_.MeleeAttack(7, 60), 7),
     'spearman': _class_.Weapon('spear', 'Spear', 'gray', 1, _class_.MeleeAttack(5, 50), 12),
-    'archer': _class_.Weapon('bow', 'Bow', 'brown', 1, _class_.RangedAttack(3, 30, _class_.Projectile(_pg.Surface((10, 10)), _paths.Line)), 130),
+    'archer': _class_.Weapon('bow', 'Bow', 'brown', 1, _class_.RangedAttack(3, 30, _class_.Arrow(PICS['projectiles']['arrow'], _paths.Line)), 130),
     'wizard': _class_.Weapon('wand', "Beginner's Spellbook", 'blue', 1, _class_.MeleeAttack(15, 120), 70),
 
 }
@@ -103,41 +105,38 @@ DEFAULT_WEAPONS = {
 ALL_COMPOS = []
 
 
-import picture_collect
+# if os.path.exists(SAVE_DIR):
+#     _SAVE = save.read_file()
+#     print(_SAVE)
+#     _INV_RAW = _SAVE['inventory']
+#     x, y = max([int(i.split('x')[0]) for i in _INV_RAW]), max(
+#         ([int(i.split('x')[1]) for i in _INV_RAW]))
+#     _INV = _class_.InventoryHandler(x, y)
+#     _INV.sort_dict(_INV_RAW)
 
-PICS = picture_collect.gather_pics('data')
-
-if os.path.exists(SAVE_DIR):
-    _SAVE = save.read_file()
-    print(_SAVE)
-    _INV_RAW = _SAVE['inventory']
-    x, y = max([int(i.split('x')[0]) for i in _INV_RAW]), max(
-        ([int(i.split('x')[1]) for i in _INV_RAW]))
-    _INV = _class_.InventoryHandler(x, y)
-    _INV.sort_dict(_INV_RAW)
-
-    MAIN_GAME_STATE = {
-        'AREA': 0,
-        'FRAMELY_FUNCTIONS': [],
-        'TERMINAL': None,
-        'SETTINGS': SETTINGS,
-        'GAME_DATA': _SAVE,
-        'INVENTORY': _INV,
-        'MAIN_DISPLAY_SURF': SURFACE,
-        'CURSOR': PICS['cursor'],
-        'PARTICLES': [],
-        'PROJECTILES': [],
-    }
-else:
-    MAIN_GAME_STATE = {
-        'AREA': 0,
-        'FRAMELY_FUNCTIONS': [],
-        'TERMINAL': None,
-        'SETTINGS': SETTINGS,
-        'GAME_DATA': {},
-        'INVENTORY': {},
-        'MAIN_DISPLAY_SURF': SURFACE,
-        'CURSOR': PICS['cursor'],
-        'PARTICLES': [],
-        'PROJECTILES': [],
-    }
+#     MAIN_GAME_STATE = {
+#         'AREA': 0,
+#         'FRAMELY_FUNCTIONS': [],
+#         'TERMINAL': None,
+#         'SETTINGS': SETTINGS,
+#         'GAME_DATA': _SAVE,
+#         'INVENTORY': _INV,
+#         'MAIN_DISPLAY_SURF': SURFACE,
+#         'CURSOR': PICS['cursor'],
+#         'PARTICLES': [],
+#         'PROJECTILES': [],
+#     }
+# else:
+MAIN_GAME_STATE = {
+    'AREA': 0,
+    'FRAMELY_FUNCTIONS': [],
+    'TERMINAL': None,
+    'SETTINGS': SETTINGS,
+    'GAME_DATA': {},
+    'INVENTORY': {},
+    'MAIN_DISPLAY_SURF': SURFACE,
+    'CURSOR': PICS['cursor'],
+    'PARTICLES': [],
+    'PROJECTILES': [],
+    'ENTITIES': [],
+}

@@ -9,7 +9,7 @@ from .damagenumbers import DamageNumber
 
 
 class Enemy:
-    """base class for stickmanranger enemies"""
+    """base class for Stickman's new world enemies"""
     id = 0
     health = 0
     damage_font = pg.font.Font(os.path.join('data', 'Roboto-Regular.ttf'), 9)
@@ -20,8 +20,9 @@ class Enemy:
     in_damage_state = False
     pos = (0, 0)
 
-    def __init__(self):
+    def __init__(self, drops):
         Enemy._enemies += 1
+        self.drops = drops
         self.id = self._enemies
 
     def hit(self, attack):

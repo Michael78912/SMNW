@@ -6,11 +6,11 @@ if the user settings
 import os
 
 import pygame
+import music
 
 import database
 
 pygame.init()
-
 
 def get_switches(game_state):
     """get a bunch of Switch objects each representing the thing."""
@@ -95,6 +95,9 @@ def main(game_state, bgimage):
     header_rect = header.get_rect(center=(400, 70))
 
     while True:
+        # check the settings to handle the music.
+        music.check(game_state)
+        
         # background image to be drawn first
         surf.blit(bgimage, (0, 0))
 

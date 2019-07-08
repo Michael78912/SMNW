@@ -16,6 +16,7 @@ STAGE_SIZE = (15, 15)
 
 
 class Stage:
+    """A stage class that can hold several screens. defeat a stage to move on."""
     unlocked = False
     beaten = False
     rect_padding = 8
@@ -73,10 +74,12 @@ class Stage:
         rect = self.rect
         left, top, width, height = rect.left, rect.top, rect.width, rect.height
         self.box = pg.Rect(left - self.rect_padding, top - self.rect_padding,
-                width + (self.rect_padding * 2), height + (self.rect_padding * 2)
-            )
+                           width + (self.rect_padding * 2), height +
+                           (self.rect_padding * 2)
+                           )
 
     def draw_on_map(self):
+        """draw the stage onto the map surface."""
         surface = self.drawing_surface
 
         if self.comes_from.beaten and self.has_icon:
@@ -102,16 +105,14 @@ class Stage:
             box = self.box
             pg.draw.rect(self.drawing_surface, YELLOW, box, 1)
 
-            fontobj = pg.font.Font(os.path.join('data', 'MICHAEL`S FONT.ttf'), 20)
+            fontobj = pg.font.Font(os.path.join(
+                'data', 'MICHAEL`S FONT.ttf'), 20)
             fontobj.set_bold(True)
             surf = fontobj.render(self.name, True, BLACK)
             surfrect = surf.get_rect()
             surfrect.center = pos[0], pos[1] - 40
 
             self.drawing_surface.blit(surf, surfrect)
-
-
-     
 
     def start_music(self):
         """stop old music, play new music."""
@@ -125,7 +126,8 @@ class Stage:
     def init(self, game_state):
         """run the stage."""
         self.game_state = game_state
-        Thread(target=self.start_music).start()
+        if game_state['SETTINGS']['music']:
+            Thread(target=self.start_music).start()
         game_state['_STAGE_DATA'] = {
             'screen_number': 0,
             'screen': self.all_screens[0],
@@ -137,13 +139,13 @@ class Stage:
         state = self.game_state
 
         terrain_surf = self.terrain.built_image if self.terrain.built_image is not None else self.terrain.build()
-        
 
         display = state['MAIN_DISPLAY_SURF']
 
         display.fill((0, 0, 0))
 
-        current_screen: screen.Screen = self.all_screens[state['_STAGE_DATA']['screen_number']]
+        current_screen: screen.Screen = self.all_screens[state['_STAGE_DATA']
+                                                         ['screen_number']]
 
         display.blit(terrain_surf, (0, 0))
 
@@ -153,7 +155,7 @@ class Stage:
 
         for particle in state['PARTICLES']:
             particle.draw(display)
-        
+
         for projectile in state['PROJECTILES']:
             projectile.draw(display)
 
@@ -168,7 +170,7 @@ class Stage:
 
             elif event.type == KEYDOWN:
                 letters.append(event.unicode)
-        
+
         if letters:
             pass
 
@@ -176,14 +178,11 @@ class Stage:
             print('open terminal...')
 
 
-
-
 def check_quit(event):
     """check if event is a quit event. if it is, quit."""
     if event.type == QUIT:
         pg.quit()
         raise SystemExit
-
 
 
 class _NullStage(Stage):

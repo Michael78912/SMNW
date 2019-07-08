@@ -10,14 +10,27 @@ def play(game_state):
     pygame.mixer.music.load(
         os.path.join('music',
             {
-                Area.MAP: 'smnwtheme.mp3',
-                Area.TITLE: 'smnwtheme.mp3'
-                Area.STAGE: 'smnwgameplay.mp3',
-                Area.BOSS:'smnwboss.mp3'
+                1: 'smnwtheme.mp3',
+                0: 'smnwtheme.mp3',
+                3: 'smnwgameplay.mp3',
+                2: 'smnwgameplay.mp3',
+                4:'smnwboss.mp3',
             }[game_state['AREA']]
         )
     )
     pygame.mixer.music.play(-1)
 
-def check(settings):
+def check(game_state):
     """check the settings to see if we should turn the music off."""
+    settings = game_state['SETTINGS']
+    if settings['music'] and pygame.mixer.music.get_busy():
+        # already playing music and music is enabled.
+        pass
+    
+    if settings['music'] and not pygame.mixer.music.get_busy():
+        # not playing, but should be. start playing
+        play(game_state)
+    
+    if not settings['music'] and pygame.mixer.music.get_busy():
+        # playing music, but shouldn't be. stop
+        pygame.mixer.music.fadeout(400)

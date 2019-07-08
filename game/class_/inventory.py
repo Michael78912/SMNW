@@ -1,94 +1,136 @@
-from pprint import pprint
-
-import pygame as pg
+"""this module is responsible for all doings with the inventory.
+all enemies and players may have an inventory, as well as the "Main"
+inventory. the "Main" inventory is a way of getting some things you
+may want to grab quickly.
+"""
 
 try:
-    from _internal import COLOURS
+    from .item import Item, ItemFlag, get_flags, NULL
+    from .weapon import Weapon
 except ImportError:
-    from ._internal import COLOURS
+    from item import Item, ItemFlag, get_flags, NULL
+    from weapon import Weapon
+
+FLAG_MAPPING = {
+    ItemFlag.WEAPON: Weapon,
+    ItemFlag.FOOD: Item,
+    ItemFlag.COMPO: Item,
+    ItemFlag.MATERIAL: Item,
+    ItemFlag.NULL_ITEM: NULL,
+}
+
+FORMAT_VER = 0
+HEAD_LENGTH = 8
+FORMAT_LEN = 3
+LENGTH_LEN = 2
 
 
-LARGEICONSIZE = 10
-
-class InventoryHandler:
-    def __init__(self, sizex, sizey):
-        self.datas = [[None for i in range(sizey)] for i in range(sizex)]
-        #print(self.datas)
-
-        #print(self.datas)
-
-    def sort_dict(self, dictionary):
-        """
-        sorts dictionary shaped like: {'1x2': whatever} and puts it into 
-        the internal 2d list.
-        """
-        #print(self.datas)
-        for indexes in sorted(dictionary):
-            x = int(indexes.split('x')[0])
-            y = int(indexes.split('x')[1])
-            # print(x, y)
-            # print("self.datas[{}][{}] = dictionary['{}']".format(
-            #     x - 1, y - 1, indexes))
-            self.datas[x - 1][y - 1] = dictionary[indexes]
-            #print(self.datas)
-
-    def build(self, surf=None, topright=(0, 0), gap=7, bgcolour=COLOURS['black'], padding=2):
-        """
-        creates the surface of the inventory image
-        :param surf: pass a surface if you want the image to be appended to the surface
-        :param topright:the topright corner for the blitting to start
-        :param gap: gap between blocks
-        :param bgcolour: the background colour of the blocks
-        :param padding: the padding on the edge of the surface
-        :return: the new/appended surface
-        """
-        lengthx, lengthy = 0, 0
-        blacksurf = pg.Surface((LARGEICONSIZE, LARGEICONSIZE))
-        blacksurf.fill(bgcolour)
-
-        # need to calculate dimensions of surface
-
-        lenarry = len(self.datas)
-        lenarrx = len(self.datas[0])    # length of the first element == all the others
-
-        for i in range(lenarrx):
-            lengthx += (gap + LARGEICONSIZE)
-        lengthx += (padding * 2)   # the padding must be multiplied by 2, for both sides
-        lengthx -= (LARGEICONSIZE - (padding + 1))
-
-        for i in range(lenarry):
-            lengthy += (gap + LARGEICONSIZE)
-        lengthy += (padding * 2)
-        lengthy -= (LARGEICONSIZE - (padding + 1))
-
-        if surf is None:
-            surf = pg.Surface((lengthx, lengthy))
-            surf.fill((255, 255, 255))
-
-        where_to_blit = list(map(lambda x: padding + x, topright))
-
-        for x in range(lenarry):
-            for i in range(lenarrx):
-                # print('where to blit:', where_to_blit)
-                surf.blit(blacksurf, where_to_blit)
-                where_to_blit[0] += (LARGEICONSIZE + gap)
-            where_to_blit[0] = (padding + topright[0])    # reset X coordinates
-            where_to_blit[1] += (LARGEICONSIZE + gap)
-
-        return surf
+def get_item(data_chunk):
+    """get a proper item, even with the proper class, from a chunk of data."""
+    types = [FLAG_MAPPING.get(flag) for flag in get_flags(
+        data_chunk) if flag]
+    while True:
+        try:
+            types.remove(None)
+        except ValueError:
+            break
+    assert len(types) == 1, "Error: More than one type given ({})".format(types)
+    if types[0] is NULL:
+        return NULL
+    return types[0].from_data(data_chunk)
 
 
+def _null_pad(lst, amount):
+    """pad the list to length <amount> with None."""
+    assert len(lst) <= amount, "you can not pad a list to less than its length"
+    while len(lst) != amount:
+        lst.append(NULL)
 
-if __name__ == '__main__':
-    a = InventoryHandler(2, 3)
-    s = {
-        '1x1': '0',
-        '1x2': '1',
-        '1x3': '2',
-        '2x1': '3',
-        '2x2': '4',
-        '2x3': '5',
-    }
-    a.sort_dict(s)
-    # pprint(a.datas)
-    pg.image.save(a.build(), r'C:\Users\Michael\Desktop\image.png')
+
+class Inventory:
+    """class for holding items. that's all this will do."""
+
+    def __init__(self, limit, items=None):
+        if items is None:
+            self.items = [NULL for _ in range(limit)]
+        else:
+            self.items = items
+            _null_pad(items, limit)
+
+        self.limit = limit
+
+        if len(self.items) > limit:
+            raise ValueError('The given items exceeds the limit.')
+
+    def __getitem__(self, i):
+        # get the item at index i
+        return self.items[i]
+
+    def __setitem__(self, i, val):
+        # set the item at i to val.
+        self.items[i] = val
+
+    def dumps(self):
+        """return all items as binary data."""
+        header = b"INV" + FORMAT_VER.to_bytes(FORMAT_LEN, 'big') \
+            + self.limit.to_bytes(LENGTH_LEN, 'big')
+        items = [item.dumps() for item in self.items]
+        data = b"\xff\xff\xff\xff".join(items)
+        return header + data
+
+    def dump(self, file):
+        """write the contents to a file."""
+        file.write(self.dumps())
+
+    def _find_empty_slot(self):
+        for i, item in enumerate(self.items):
+            if item is NULL:
+                return i
+
+        # no empty slot, raise an error for now
+        raise ValueError("No empty slots available")
+
+    def add(self, item):
+        """add an item to the closest empty slot."""
+        slot = self._find_empty_slot()
+        self[slot] = item
+
+    @classmethod
+    def from_data(cls, data):
+        """read the data, and make a new Inventory object from it."""
+        print(data)
+        head = data[:HEAD_LENGTH]
+        version = int.from_bytes(head[3:3 + FORMAT_LEN], 'big')
+        length = int.from_bytes(head[3 + FORMAT_LEN:HEAD_LENGTH], 'big')
+        item_data = data[HEAD_LENGTH:]
+        items = [get_item(chunk)
+                 for chunk in item_data.split(b"\xff\xff\xff\xff")]
+        return cls(length, items)
+
+    @classmethod
+    def from_file(cls, file):
+        """read the file and return a Inventory object from it."""
+        return cls.from_data(file.read())
+
+    def __str__(self):
+        return str(self.items)
+
+
+def _main():
+    from weapon import Weapon
+    i = Inventory(10, [
+        Item(ItemFlag.FOOD, health=12, licon="Nothing", sicon="Nothing"),
+        Item(ItemFlag.COMPO, ItemFlag.ELITE, licon="Newton", sicon="Fig"),
+        Weapon('sword', 'Sword', 'blue', 1, 10, 10),
+    ])
+    with open('inventory.smr-inv', 'wb') as file:
+        i.dump(file)
+    with open('inventory.smr-inv', 'rb') as file:
+        i = Inventory.from_file(file)
+
+    print(i)
+
+
+# print(get_item(open('data.bin', 'rb').read()))
+if __name__ == "__main__":
+    _main()

@@ -14,14 +14,14 @@ import class_
 import database
 import gameplay
 import logs
+import exit
+import music
 import settings
 import terminal
 from class_.character_image import CharacterImage
 from database import COLOURS, MAIN_GAME_STATE, Area
 
 # pylint: disable=no-name-in-module
-
-
 
 
 # window sizes
@@ -50,10 +50,6 @@ def _border(surf, colour):
     surf's rectangle.
     """
     rect = surf.get_rect()
-    bottom = rect.bottomleft, rect.bottomright
-    top = rect.topleft, rect.topright
-    left = rect.topleft, rect.bottomleft
-    right = rect.topright, rect.bottomright
 
     lines = [(rect.bottomright[0] - 1, rect.bottomright[1] - 1),
              (rect.bottomleft[0], rect.bottomleft[1] - 1),
@@ -177,7 +173,7 @@ class ClickableLabel:
         mouseover = self.rect.collidepoint(
             pg.mouse.get_pos())
         # print(pg.mouse.get_pos())
-        #@print(self.rect.topleft)
+        # @print(self.rect.topleft)
 
         if mouseover:
             # print('shading')
@@ -214,6 +210,9 @@ class ClickableLabel:
 def main():
     """start the game"""
 
+    # initiate logging system
+    logs.init()
+
     # set caption and title screen
     pg.display.set_caption("Stickman's New World")
     pg.display.set_icon(PICS['game_icon'])
@@ -236,22 +235,18 @@ def main():
                 continue_ = not continue_
         pg.display.update()
 
-
-
-    pg.mixer.music.load(os.path.join(
-        os.getcwd(), 'music', 'smnwtheme.mp3'
-    ))
-    pg.mixer.music.play(-1)   # loop forever, until stopped
-
+    music.check(MAIN_GAME_STATE)
     choose_function()
 
+
 def choose_function():
-    func = lambda: None
+    def func(): return None
     continue_ = True
     rects = draw_choices()
     while continue_:
+        music.check(MAIN_GAME_STATE)
         SURFACE.blit(PICS['menu_background'], (0, 0))
-        
+
         if MAIN_GAME_STATE.get('TERMINAL') is not None:
             MAIN_GAME_STATE['TERMINAL'].threaded_update()
 
@@ -398,21 +393,21 @@ def new_game():
         CharacterImage('archer',
                        Namespace(colour='brown'),
                        (12, 16),
-                       None, 
+                       None,
                        ),
         CharacterImage('spearman',
                        Namespace(colour='grey'),
                        (12, 16),
-                       None, 
+                       None,
                        ),
         CharacterImage('wizard',
                        Namespace(colour='blue'),
                        (12, 16),
-                       None, 
+                       None,
                        ),
     ]
 
-    null = lambda: None
+    def null(): return None
 
     y = WIN_Y // 2 + 30
 
@@ -490,6 +485,7 @@ def new_game():
     filled = False
 
     while continue_:
+        music.check(MAIN_GAME_STATE)
         SURFACE.blit(PICS['menu_background'], (0, 0))
         if None not in chosen:
             next_button.draw(SURFACE)
@@ -552,7 +548,8 @@ def new_game():
 
     continue_ = True
     MAIN_GAME_STATE["AREA"] = database.Area.MAP
-    MAIN_GAME_STATE["PLAYERS"] = get_characters_from_images([i[0] for i in chosen])
+    MAIN_GAME_STATE["PLAYERS"] = get_characters_from_images(
+        [i[0] for i in chosen])
 
     gameplay.main()
 
@@ -576,7 +573,8 @@ def get_characters_from_images(images):
     num = 1
 
     for name in names:
-        characters.append(namestotypes[name](num, MAIN_GAME_STATE, copy.copy(database.DEFAULT_WEAPONS[name])))
+        characters.append(namestotypes[name](
+            num, MAIN_GAME_STATE, copy.copy(database.DEFAULT_WEAPONS[name])))
         num += 1
 
     return characters
@@ -592,6 +590,7 @@ def start_settings():
     settings.main(MAIN_GAME_STATE, PICS['menu_background'])
     choose_function()
 
+
 RECT_FUNCS = [
     lambda: None,
     new_game,
@@ -604,10 +603,12 @@ if __name__ == '__main__':
         main()
     except Exception:
         logging.exception("Exception Encountered")
+        exit.special_exit(MAIN_GAME_STATE)
         raise
-    
+
     except SystemExit:
         logging.debug("Exiting normally.")
+        exit.exit(MAIN_GAME_STATE)
 
     finally:
         logging.debug('exiting game.')

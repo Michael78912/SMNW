@@ -6,6 +6,8 @@ decide to use something other than Blob and Stationary, I'll be fine.
 
 import random
 
+import pygame
+
 from .enemy import Enemy
 
 __all__ = ['Blob', 'Stationary']
@@ -41,6 +43,7 @@ class Blob(Enemy):
         self.head = head
         self.size_px = head.size_px
         self.size = size
+        self.hitbox = pygame.rect.Rect((0, 0), (size, size))
         # name is used by the game itself.
         self.name = head.name + '_blob'
         # pretty_name is the name that appears in the library
@@ -63,6 +66,9 @@ class Blob(Enemy):
         """draws enemy to screen at coordinates.
         using cartesian system.
         """
+
+        self.hitbox = pygame.rect.Rect(coordinates, (self.size, self.size))
+
         if self.dead:
             return
         self.on_screen = True
@@ -141,10 +147,13 @@ class Blob(Enemy):
 
 class Stationary(Blob):
     """similar to blob, but does n ot move."""
+
     def move(self, _, surface, terrain):
         block = terrain[
-            terrain.px_pos_to_blocks(
-                self.pos
-            )
+            terrain.px_to_blocks(
+                self.pos[0],
+            ), terrain.px_to_blocks(
+                self.pos[1] + self.size_px,
+            ),
         ]
         self.pos = self.pos[0], self.pos[1] + block.solid

@@ -8,11 +8,11 @@ from .., so this should be fine
 
 try:
     from . import new_terrain
-    from .projectile import Projectile
+    from .projectile import Projectile, Arrow
     from .screen import Screen, PeacefulScreen
     from .backgroundimage import BackGroundImage
     from .stage import Stage
-    from .inventory import InventoryHandler
+    from .deprecated_inventory import InventoryHandler
     from .enemy_head import EnemyHead
     from .my_rect import MyRect
     from .smr_error import SMRError

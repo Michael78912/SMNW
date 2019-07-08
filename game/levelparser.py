@@ -5,6 +5,8 @@ import os
 
 import class_
 
+def make_drop(drop_obj):
+    """make a drop out of the given attributes."""
 
 def get_levels(mainsurf):
     """parse and return all levels in levels.json."""

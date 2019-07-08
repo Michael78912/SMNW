@@ -36,6 +36,7 @@ class Class:
             player_num,
             weapon,
             main_game_state,
+            inventory,
             stats=(50, 0, 0, 0, 0),
             spec=None,
     ):
@@ -52,6 +53,7 @@ class Class:
             type_, weapon, (0, 0), main_game_state)
         self.type_ = type_
         self.spec = spec
+        self.inventory = inventory
 
     def __repr__(self):
         return """character number {} type {}""".format(self.player_num, self.type_)
@@ -166,8 +168,8 @@ class Class:
         distance = target_x - x if target_x >= x else x - target_x
 
         # if we are going to attack, don't move.
-        can_move = can_move and distance >= self.weapon.range
-        if distance <= self.weapon.range:
+        can_move = can_move and distance >= self.weapon.attrs['range_']
+        if distance <= self.weapon.attrs['range_']:
             # self.weapon.attack_enemy(motion_target)
             self.attack(enemy, game_state)
         if can_move:
@@ -178,7 +180,7 @@ class Class:
                                  pixels=random.randint(1, self.max_motion))
 
         update = random.randint(0, self._chance_of_update) == 1
-        if distance <= self.weapon.range:
+        if distance <= self.weapon.attrs['range_']:
             update = False
 
         if not self.image.has_drawn:
@@ -243,7 +245,7 @@ class Class:
 
     #     can_move = random.randint(0, self.chance_of_motion) == 1 and can_move
     #     # can_move = can_move and ((self.image.topright[0] - target_x) if self.image.topright[0] > target_x else (target_x - self.image.topright[0]))
-    #     can_move = can_move and distance >= self.weapon.range
+    #     can_move = can_move and distance >= self.weapon.attrs['range']
 
     #     if can_move:
     #         print(self, "moving...")
@@ -259,7 +261,7 @@ class Class:
     #     # game_state['MAIN_DISPLAY_SURF'].blit(self.picture, self.image.topright)
 
     #     update = random.randint(0, self._chance_of_update) == 1
-    #     if distance <= self.weapon.range:
+    #     if distance <= self.weapon.attrs['range']:
     #         update = False
 
     #     if not self.image.has_drawn:

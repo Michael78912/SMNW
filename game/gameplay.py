@@ -9,6 +9,7 @@ import pygame as pg
 from pygame.locals import MOUSEBUTTONDOWN, QUIT
 
 import terminal
+import music
 from database import ALL_LEVELS, MAIN_GAME_STATE, PICS, Area
 
 SURFACE = MAIN_GAME_STATE['MAIN_DISPLAY_SURF']
@@ -24,6 +25,8 @@ def secondly_check(game_state):
     run this every second or so. it will choose to check some things.
     """
     game_state['PARTICLES'] = list(filter(lambda x: x.lifespan != 0, game_state['PARTICLES']))
+    game_state['PROJECTILES'] = list(filter(lambda x: x.lifespan != 0, game_state['PROJECTILES']))
+    music.check(game_state)
 
 
 def main():
@@ -33,12 +36,21 @@ def main():
     menu = pg.Surface((800, 200))
     menu.fill((0, 255, 0))
     MAIN_GAME_STATE['MOUSEDOWN'] = False
+    music.check(MAIN_GAME_STATE)
 
     while continue_:
+        for entity in MAIN_GAME_STATE['ENTITIES']:
+            # we don't need to worry about dead entities here, they
+            # will be removed automatically by update.
+            entity.update()
+        # print(MAIN_GAME_STATE['SETTINGS'])
+
         frames += 1
         print('FPS: ', CLOCK.get_fps())
+
         if frames % (60 * 30) == 0:
             logging.debug('FPS: %f', CLOCK.get_fps())
+
         if frames % 60 == 0:
             # run secondly check
             secondly_check(MAIN_GAME_STATE)
@@ -46,8 +58,8 @@ def main():
         MAIN_GAME_STATE['MOUSE_POS'] = pg.mouse.get_pos()
         events = [event for event in pg.event.get()]
 
-        for e in events:
-            terminal.handle(e)
+        for event in events:
+            terminal.handle(events)
 
         if MAIN_GAME_STATE['AREA'] == Area.MAP:
             draw_map()
@@ -56,10 +68,12 @@ def main():
         elif MAIN_GAME_STATE['AREA'] == Area.STAGE:
             MAIN_GAME_STATE['STAGE'].update(events)
 
-        if MAIN_GAME_STATE.get('TERMINAL'):
-            for e in events:
-                MAIN_GAME_STATE['TERMINAL'].add_event(e)
+        if MAIN_GAME_STATE.get('TERMINAL') is not None:
+            for event in events:
+                MAIN_GAME_STATE['TERMINAL'].add_event(event)
+
             MAIN_GAME_STATE['TERMINAL'].threaded_update()
+
         MAIN_GAME_STATE['MAIN_DISPLAY_SURF'].blit(MAIN_GAME_STATE['CURSOR'], pg.mouse.get_pos())
         # MAIN_GAME_STATE['MAIN_DISPLAY_SURF'].blit(menu, (0, 400))
         pg.display.update()
@@ -73,6 +87,7 @@ def draw_map():
         stage.draw_on_map()
 
 def handle_map():
+    """handle the events when we are in the  map area."""
     pos = pg.mouse.get_pos()
 
     for stage in ALL_LEVELS:
@@ -86,8 +101,6 @@ def handle_map():
                 stage.init(MAIN_GAME_STATE)
                 MAIN_GAME_STATE['STAGE'] = stage
                 MAIN_GAME_STATE['AREA'] = Area.STAGE
-
-
 
 
 def check_quit(event):

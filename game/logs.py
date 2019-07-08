@@ -2,7 +2,8 @@
 
 import logging
 
-logging.basicConfig(level=logging.DEBUG,
+def init():
+    logging.basicConfig(level=logging.DEBUG,
                     filename="SMNW.log",
                     filemode="w",
                     format="%(name)s:%(asctime)s -- %(levelname)s -- %(message)s"
